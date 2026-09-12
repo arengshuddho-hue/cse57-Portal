@@ -344,12 +344,6 @@ document.addEventListener('keydown', function(e){
   }
 });
 
-// ============================================================
-// NOTE VAULT — personal notes accessed by a private code
-// Separate Firebase project (RTDB only) + Cloudinary for files.
-// No login/email involved: the code IS the key.
-// Notes auto-expire and are deleted 30 days after creation.
-// ============================================================
 
 const vaultFirebaseConfig = {
   apiKey: "AIzaSyDtECNnScV_uie6qvmb-HAxQ6dKDglxOfA",
@@ -364,16 +358,15 @@ const vaultFirebaseConfig = {
 const CLOUDINARY_CLOUD_NAME = "dwvomd7wd";
 const CLOUDINARY_UPLOAD_PRESET = "CSE57C";
 
-// Notes older than this are auto-deleted on next access
-const VAULT_NOTE_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
-// Give this app instance its own name so it doesn't clash with the main portal app
+const VAULT_NOTE_TTL_MS = 30 * 24 * 60 * 60 * 1000; 
+
 const vaultApp = initializeApp(vaultFirebaseConfig, "vaultApp");
 const vaultDb = getDatabase(vaultApp);
 
-let vaultContentType = 'text'; // text | code | image | pdf
+let vaultContentType = 'text'; 
 let vaultChosenFile = null;
-let currentVaultCode = null; // code of the note currently shown in the "Open Note" pane
+let currentVaultCode = null; 
 
 function sanitizeVaultCode(raw){
   // Keep codes URL/DB-key safe: letters, numbers, dash, underscore only
@@ -737,8 +730,6 @@ function renderVaultNote(note, code){
   }
 }
 
-// ----- Delete note (protects against accidental wrong uploads) -----
-// Click once to arm, click again within a few seconds to actually delete.
 function confirmDeleteVaultNote(code){
   const btn = document.getElementById('vaultDeleteBtn');
   if(!btn) return;
@@ -776,7 +767,6 @@ async function deleteVaultNoteNow(code){
   }
 }
 
-// ----- Full-screen viewer for ALREADY SAVED text/code notes (read-only, VS Code style) -----
 window.openVaultFullscreen = function(note){
   const overlay = document.getElementById('vaultFullscreenOverlay');
   const body = document.getElementById('vaultFullscreenBody');
@@ -805,9 +795,6 @@ window.openVaultFullscreen = function(note){
   document.body.style.overflow = 'hidden';
 }
 
-// ----- Full-screen EDITOR for the note being composed, BEFORE saving -----
-// Lets the user paste/write in a large VS Code-style view; syncs live back
-// into the actual textarea in the "Save New Note" form.
 window.openVaultEditorFullscreen = function(){
   const overlay = document.getElementById('vaultFullscreenOverlay');
   const body = document.getElementById('vaultFullscreenBody');
@@ -824,7 +811,6 @@ window.openVaultEditorFullscreen = function(){
   const fsTextarea = document.getElementById('vaultFsEditTextarea');
   fsTextarea.value = textarea.value;
 
-  // Live two-way sync so nothing is lost whether you type here or in the small box
   fsTextarea.addEventListener('input', () => {
     textarea.value = fsTextarea.value;
   });
@@ -859,11 +845,6 @@ document.addEventListener('keydown', e => {
     if(fs && fs.classList.contains('on')) window.closeVaultFullscreen();
   }
 });
-
-
-// ============================================================
-// NOTIFICATIONS — bell icon, dropdown, unread badge
-// ============================================================
 
 const CATEGORY_META = {
   TICKER: { label: 'Info Ticker', icon: 'fa-bolt' },
@@ -986,15 +967,6 @@ document.addEventListener('click', function(e){
   }
 });
 
-
-// ============================================================
-// CODE RUNNER — HTML/CSS/JS live preview + Paiza.io for others
-// (Piston/emkc.org returned 401 on execute; Judge0 CE demo
-//  blocked cross-origin fetch entirely ("Failed to fetch").
-//  Paiza.io's API is built for exactly this — public, CORS-
-//  enabled, no API key needed with api_key=guest.)
-// ============================================================
-
 const PAIZA_LANG = {
   python3: 'python3',
   cpp: 'cpp',
@@ -1022,7 +994,7 @@ async function executeCode(content, lang, outBox, runBtn){
   const consoleEl = outBox.querySelector('.vault-run-console');
 
   try {
-    // Step 1: submit the code, get back a session id
+   
     const createUrl = 'https://api.paiza.io/runners/create?' + new URLSearchParams({
       source_code: content,
       language: PAIZA_LANG[lang] || 'python3',
@@ -1033,7 +1005,7 @@ async function executeCode(content, lang, outBox, runBtn){
     const createData = await createRes.json();
     if(!createData.id) throw new Error(createData.error || 'Could not start execution');
 
-    // Step 2: poll until the run finishes (max ~15s)
+   
     let status = 'running';
     let attempts = 0;
     while(status !== 'completed' && attempts < 15){
@@ -1049,7 +1021,7 @@ async function executeCode(content, lang, outBox, runBtn){
 
     if(status !== 'completed') throw new Error('Execution timed out');
 
-    // Step 3: fetch the actual output
+    /
     const detailsUrl = 'https://api.paiza.io/runners/get_details?' + new URLSearchParams({
       id: createData.id, api_key: 'guest'
     });
@@ -1138,11 +1110,6 @@ window.switchViewWebPanel = function(btn, panel){
   document.getElementById('vaultViewJs').style.display = panel === 'js' ? 'block' : 'none';
 }
 
-
-// ============================================================
-// VISITOR PRESENCE — active now + total visits (admin-only view)
-// ============================================================
-
 import { onDisconnect, push as presencePush, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
 (function trackPresence(){
@@ -1150,6 +1117,5 @@ import { onDisconnect, push as presencePush, runTransaction, serverTimestamp } f
   set(presenceRef, { connectedAt: serverTimestamp() });
   onDisconnect(presenceRef).remove();
 
-  // Atomically bump total visit counter
   runTransaction(ref(db, 'stats/totalVisits'), (current) => (current || 0) + 1);
 })();

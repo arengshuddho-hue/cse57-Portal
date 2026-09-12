@@ -13,8 +13,6 @@ const firebaseConfig = {
   measurementId: "G-MY3ZVBD1SZ"
 };
 
-// ---- Cloudinary Config ----
-
 const CLOUDINARY_CLOUD_NAME = "dwvomd7wd";
 const CLOUDINARY_UPLOAD_PRESET = "CSE57C";
 
@@ -78,7 +76,6 @@ window.logout = function() {
   });
 };
 
-// ---- Toggle between Link input and File upload input based on Item Type ----
 window.toggleInputMode = function() {
   const type = document.getElementById('itemType').value;
   const linkWrap = document.getElementById('linkInputWrap');
@@ -93,13 +90,11 @@ window.toggleInputMode = function() {
   }
 };
 
-// ---- Upload selected file to Cloudinary, return secure_url ----
 async function uploadFileToCloudinary(file) {
   const formData = new FormData();
   formData.append('file', file);
   formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
 
-  // raw resource_type covers PDFs and other non-image/video files
   const isPdf = file.type === 'application/pdf';
   const resourceType = isPdf ? 'raw' : 'auto';
 
@@ -225,12 +220,6 @@ window.deleteItem = function(category, index) {
   }
 };
 
-// Replace the existing `window.syncClassroom` function in assets/js/admin.js
-// with this version. The only real change is in the loop near the bottom:
-// it now keeps whatever `type` the Apps Script sent (text / link) instead
-// of always forcing `type: 'link'`, and it no longer silently drops items
-// that don't have `content` set but do have an `error`.
-
 window.syncClassroom = async function() {
   const btn = document.getElementById('classroomSyncBtn');
   const resultBox = document.getElementById('classroomSyncResult');
@@ -256,9 +245,7 @@ window.syncClassroom = async function() {
       newItems.forEach(item => {
         const cat = item.category || 'GCLASSROOM';
         if (!dbData[cat]) dbData[cat] = [];
-        // Preserve the type sent by the sync script (text / link).
-        // Default to 'link' only if nothing was specified.
-        dbData[cat].unshift({
+         dbData[cat].unshift({
           type: item.type || 'link',
           title: item.title,
           content: item.content
