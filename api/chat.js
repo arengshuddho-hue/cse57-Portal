@@ -31,8 +31,7 @@ const CATEGORY_LABELS = {
   BOOKS: 'Books',
 };
 
-// Turns the live portalData JSON into a compact, LLM-friendly text block:
-// "- [Complex Variables] Chapter 1 Notes -> https://..."
+
 function buildResourceListing(portalData) {
   if (!portalData || typeof portalData !== 'object') return '(No live resource data available right now.)';
 
@@ -45,7 +44,6 @@ function buildResourceListing(portalData) {
     items.forEach((item) => {
       if (!item) return;
 
-      // Old data was sometimes a plain string (usually a link)
       if (typeof item === 'string') {
         lines.push(`- [${label}] ${label} -> ${item}`);
         return;
@@ -57,8 +55,7 @@ function buildResourceListing(portalData) {
       if (!value) return;
 
       if (type === 'text') {
-        // Plain text notes have no URL, skip — nothing to link to
-        return;
+     return;
       }
 
       lines.push(`- [${label}] ${title} -> ${value}`);
@@ -119,7 +116,7 @@ ${PORTAL_INFO}
 ${resourceListing}
 `;
 
-  // Groq OpenAI-compatible format: { role: 'user'|'assistant', content: '...' }
+  // Groq OpenAI-compatible format: 
   const messages = [
     { role: 'system', content: systemPrompt },
     ...(Array.isArray(history) ? history : []),
