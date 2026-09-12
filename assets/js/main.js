@@ -1021,7 +1021,7 @@ async function executeCode(content, lang, outBox, runBtn){
 
     if(status !== 'completed') throw new Error('Execution timed out');
 
-    /
+  
     const detailsUrl = 'https://api.paiza.io/runners/get_details?' + new URLSearchParams({
       id: createData.id, api_key: 'guest'
     });
