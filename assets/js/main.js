@@ -811,7 +811,6 @@ window.openVaultEditorFullscreen = function(){
   const fsTextarea = document.getElementById('vaultFsEditTextarea');
   fsTextarea.value = textarea.value;
 
-  // Live two-way sync so nothing is lost whether you type here or in the small box
   fsTextarea.addEventListener('input', () => {
     textarea.value = fsTextarea.value;
   });
@@ -846,11 +845,6 @@ document.addEventListener('keydown', e => {
     if(fs && fs.classList.contains('on')) window.closeVaultFullscreen();
   }
 });
-
-
-// ============================================================
-// NOTIFICATIONS — bell icon, dropdown, unread badge
-// ============================================================
 
 const CATEGORY_META = {
   TICKER: { label: 'Info Ticker', icon: 'fa-bolt' },
