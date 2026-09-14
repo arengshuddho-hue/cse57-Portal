@@ -1119,3 +1119,57 @@ import { onDisconnect, push as presencePush, runTransaction, serverTimestamp } f
 
   runTransaction(ref(db, 'stats/totalVisits'), (current) => (current || 0) + 1);
 })();
+
+// ===== Exam Notice Popup (public side) =====
+let noticeEnabled = false;
+let noticeItems = [];
+let globalLink = { url: '', label: '' };
+
+function todayStr() {
+  const now = new Date();
+  const dhaka = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }));
+  const y = dhaka.getFullYear();
+  const m = String(dhaka.getMonth() + 1).padStart(2, '0');
+  const d = String(dhaka.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function tryShowNotice() {
+  if (!noticeEnabled) return;
+  const today = todayStr();
+  const entry = noticeItems.find(e => e.date === today);
+  if (!entry) return;
+
+  document.getElementById('examNoticeTitleView').textContent = entry.title || 'Exam Routine';
+
+  const viewEl = document.getElementById('examRoutineView');
+  viewEl.innerHTML = `<div class="vault-note-text">${(entry.content || '').replace(/\n/g, '<br>')}</div>`;
+
+  const btnEl = document.getElementById('examSuggestionBtn');
+  if (globalLink.url) {
+    btnEl.href = globalLink.url;
+    document.getElementById('examSuggestionLabelView').textContent = globalLink.label || 'Suggestion';
+    btnEl.style.display = 'flex';
+  } else {
+    btnEl.style.display = 'none';
+  }
+
+  setTimeout(() => {
+    document.getElementById('examNoticeOverlay').classList.add('on');
+  }, 1200);
+}
+
+onValue(ref(db, 'examNotice/enabled'), (snap) => {
+  noticeEnabled = snap.exists() ? snap.val() : false;
+  tryShowNotice();
+});
+
+onValue(ref(db, 'examNotice/globalLink'), (snap) => {
+  globalLink = snap.exists() ? snap.val() : { url: '', label: '' };
+  tryShowNotice();
+});
+
+onValue(ref(db, 'examNotice/items'), (snap) => {
+  noticeItems = snap.exists() ? snap.val() : [];
+  tryShowNotice();
+});
