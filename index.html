@@ -618,7 +618,26 @@ body.light .vault-web-tab.active { background: rgba(130,80,223,0.08); color: #82
     <div class="vault-fs-body" id="vaultFullscreenBody"></div>
   </div>
 </div>
- 
+ <!-- Exam Notice Popup -->
+<div class="overlay" id="examNoticeOverlay" onclick="if(event.target.id==='examNoticeOverlay') document.getElementById('examNoticeOverlay').classList.remove('on')">
+  <div class="modal" style="max-width: 500px;">
+    <div class="modal-top">
+      <div class="modal-title-group">
+        <div class="modal-icon"><i class="fa-solid fa-calendar-days"></i></div>
+        <div><h3 id="examNoticeTitleView">Exam Routine</h3><div class="sub">Today's Notice</div></div>
+      </div>
+      <button class="modal-close" onclick="document.getElementById('examNoticeOverlay').classList.remove('on')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div id="examRoutineView"></div>
+      <a href="#" id="examSuggestionBtn" target="_blank" class="pdf-item" style="margin-top:16px; display:none;">
+        <div class="fi"><i class="fa-solid fa-lightbulb"></i></div>
+        <div class="pdf-label" id="examSuggestionLabelView">Suggestion</div>
+        <i class="fa-solid fa-arrow-up-right-from-square pdf-arrow"></i>
+      </a>
+    </div>
+  </div>
+</div>
 <!-- About Portal Modal (GitHub Style README) -->
 <div class="overlay" id="aboutOverlay" onclick="close_about(event)">
   <div class="modal about-modal" style="max-width: 760px; background: #0d1117; border: 1px solid #30363d;">
@@ -821,17 +840,7 @@ body.light .vault-web-tab.active { background: rgba(130,80,223,0.08); color: #82
     }
   });
 
-  // Auto-show About Portal for first-time visitors
-window.addEventListener('DOMContentLoaded', function() {
-  const hasVisited = localStorage.getItem('cse57_visited');
-  if (!hasVisited) {
-    setTimeout(function() {
-      openAboutModal();
-    }, 2000);
-    localStorage.setItem('cse57_visited', 'true');
-  }
-});
-
+ 
   // ===== Category Filter Tabs =====
   function updateFilterCounts(){
     const cards = document.querySelectorAll('#mainGrid .card');
