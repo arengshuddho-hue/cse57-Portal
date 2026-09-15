@@ -1,4 +1,15 @@
-﻿import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+﻿// ===== Service Worker Registration (PWA) =====
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js').catch(console.error);
+  });
+}
+
+try {
+  const cached = localStorage.getItem('cse57_offline_data');
+  if (cached) window.data = JSON.parse(cached);
+} catch (e) {}
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getDatabase, ref, onValue, set, get, child } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
 const firebaseConfig = {
@@ -23,6 +34,7 @@ onValue(ref(db, 'portalData'), (snapshot) => {
   if (liveData) {
     window.data = liveData;
     build_ticker();
+    try { localStorage.setItem('cse57_offline_data', JSON.stringify(window.data)); } catch (e) {}
   }
 });
 
