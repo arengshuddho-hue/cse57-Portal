@@ -9,6 +9,7 @@ try {
   const cached = localStorage.getItem('cse57_offline_data');
   if (cached) window.data = JSON.parse(cached);
 } catch (e) {}
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getDatabase, ref, onValue, set, get, child } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
@@ -35,8 +36,62 @@ onValue(ref(db, 'portalData'), (snapshot) => {
     window.data = liveData;
     build_ticker();
     try { localStorage.setItem('cse57_offline_data', JSON.stringify(window.data)); } catch (e) {}
+    cacheFilesForOffline(window.data);
   }
 });
+
+// ===== Offline File Caching (PDFs, images) =====
+const FILE_CACHE_NAME = 'cse57c-files-v1';
+
+async function cacheFilesForOffline(data){
+  if(!('caches' in window)) return;
+  try {
+    const cache = await caches.open(FILE_CACHE_NAME);
+    const urls = new Set();
+
+    Object.values(data).forEach(items => {
+      if(!Array.isArray(items)) return;
+      items.forEach(item => {
+        const url = typeof item === 'string' ? item : (item.content || item.file || item.link || '');
+        if(url && /^https?:\/\//i.test(url) && url.includes('cloudinary.com')){
+          urls.add(url);
+        }
+      });
+    });
+
+    for(const url of urls){
+      const already = await cache.match(url);
+      if(already) continue;
+      try {
+        const res = await fetch(url, { mode: 'cors' });
+        if(res.ok) await cache.put(url, res);
+      } catch(e) {
+        // এই URL cache করা গেল না — চুপচাপ স্কিপ
+      }
+    }
+  } catch(e){
+    console.error('File caching failed', e);
+  }
+}
+
+async function openFileOfflineAware(url, ev){
+  if(navigator.onLine) return;
+
+  ev.preventDefault();
+  try {
+    const cache = await caches.open(FILE_CACHE_NAME);
+    const cached = await cache.match(url);
+    if(cached){
+      const blob = await cached.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, '_blank');
+    } else {
+      alert('This file is not saved for offline use yet. Open it once while online, and it will be available offline next time.');
+    }
+  } catch(e){
+    alert('This file could not be opened offline.');
+  }
+}
 
 // Build Scrolling Ticker
 function build_ticker(){
@@ -154,6 +209,7 @@ window.open_modal = function(name, code, key, icon){
       // Default: Link (PDF, YouTube, etc.)
       const a = document.createElement('a');
       a.href = content; a.target = '_blank'; a.className = 'pdf-item pdf-type';
+      a.onclick = (ev) => openFileOfflineAware(content, ev);
       
       let iconClass = 'fa-file-pdf';
       let iconColorClass = 'pdf-type'; 
@@ -1145,4 +1201,3 @@ function todayStr() {
   const d = String(dhaka.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
 }
-
