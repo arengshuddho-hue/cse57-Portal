@@ -26,7 +26,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-window.data = {};
+window.data = window.data || {};
 
 // Fetch Live Data
 onValue(ref(db, 'portalData'), (snapshot) => {
