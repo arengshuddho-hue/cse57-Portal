@@ -393,94 +393,82 @@ body.light .vault-web-tab.active { background: rgba(130,80,223,0.08); color: #82
 </div>
 
   <!-- ===================== ONE UNIFIED GRID ===================== -->
+    <!-- ===================== ONE UNIFIED GRID ===================== -->
   <div class="grid" id="mainGrid">
 
+    <!-- ===== TOP PRIORITY ===== -->
+    <div class="card routine" data-cat="academic" onclick="open_modal('Exam Routine','No Exam Currently','ROUTINE','fa-calendar-days')">
+      <div class="ic"><i class="fa-solid fa-calendar-days"></i></div><div class="name">Exam Routine</div><div class="code">No Exam Currently</div>
+    </div>
+    <div class="card sug" data-cat="study" onclick="open_modal('Suggestions','All Subjects','SUG','fa-lightbulb')">
+      <div class="ic"><i class="fa-solid fa-lightbulb"></i></div><div class="name">Suggestions</div><div class="code">All Subjects</div>
+    </div>
+
+    <!-- ===== SUBJECTS ===== -->
+    <div class="card sub" data-cat="subjects" onclick="open_modal('DSA 2','CSE0613221/222','DSA2','fa-sitemap')">
+      <div class="ic"><i class="fa-solid fa-sitemap"></i></div><div class="name">DSA 2</div><div class="code">CSE0613221/222</div>
+    </div>
+    <div class="card sub" data-cat="subjects" onclick="open_modal('Software Engg','CSE0613225/226','SE','fa-diagram-project')">
+      <div class="ic"><i class="fa-solid fa-diagram-project"></i></div><div class="name">Software Engg</div><div class="code">CSE0613225/226</div>
+    </div>
+    <div class="card sub" data-cat="subjects" onclick="open_modal('Complex Variables','MATH0541221','MATH','fa-square-root-variable')">
+      <div class="ic"><i class="fa-solid fa-square-root-variable"></i></div><div class="name">Complex Variables</div><div class="code">MATH0541221</div>
+    </div>
+    <div class="card sub" data-cat="subjects" onclick="open_modal('Numerical Methods','CSE0541227','NUM','fa-calculator')">
+      <div class="ic"><i class="fa-solid fa-calculator"></i></div><div class="name">Numerical Methods</div><div class="code">CSE0541227</div>
+    </div>
+    <div class="card sub" data-cat="subjects" onclick="open_modal('Data Communication','CSE0612223','DCOM','fa-network-wired')">
+      <div class="ic"><i class="fa-solid fa-network-wired"></i></div><div class="name">Data Comm.</div><div class="code">CSE0612223</div>
+    </div>
+    <div class="card sub" data-cat="subjects" onclick="open_modal('Internet Prog. Lab','CSE0613208','IPLAB','fa-globe')">
+      <div class="ic"><i class="fa-solid fa-globe"></i></div><div class="name">Internet Prog. Lab</div><div class="code">CSE0613208</div>
+    </div>
+
+    <!-- ===== PERSONAL ===== -->
     <div class="card vault" data-cat="personal" onclick="openVaultModal()">
-   
       <div class="ic"><i class="fa-solid fa-key"></i></div><div class="name">Note Vault</div><div class="code">Personal · Code Access</div>
     </div>
     <a class="card update" data-cat="personal" href="https://docs.google.com/forms/d/e/1FAIpQLSe-2_STuSi_r8w7z5zHcmCyaEonfVUlkwM5NPWI6WKWA51oFQ/viewform?usp=sharing&ouid=103587266722819910531" target="_blank">
-    
       <div class="ic"><i class="fa-solid fa-cloud-arrow-up"></i></div><div class="name">Update Files</div><div class="code">Google Form</div>
     </a>
 
+    <!-- ===== ACADEMIC ===== -->
+    <div class="card clsroutine" data-cat="academic" onclick="open_modal('Class Routine','Weekly Schedule','CLSROUTINE','fa-table-list')">
+      <div class="ic"><i class="fa-solid fa-table-list"></i></div><div class="name">Class Routine</div><div class="code">Weekly Schedule</div>
+    </div>
     <div class="card courses" data-cat="academic" onclick="open_modal('Upcoming Courses','Course List','COURSES','fa-graduation-cap')">
-     
       <div class="ic"><i class="fa-solid fa-graduation-cap"></i></div><div class="name">Upcoming Courses</div><div class="code">Course List</div>
     </div>
     <div class="card faculty" data-cat="academic" onclick="open_modal('Faculty List','Teachers & Advisors','FACULTY','fa-chalkboard-user')">
-     
       <div class="ic"><i class="fa-solid fa-chalkboard-user"></i></div><div class="name">Faculty List</div><div class="code">Teachers & Advisors</div>
     </div>
-        <div class="card classroom" data-cat="academic" onclick="open_modal('Classroom Code','Google Classroom','CLASSROOM','fa-hashtag')">
-   
+    <div class="card classroom" data-cat="academic" onclick="open_modal('Classroom Code','Google Classroom','CLASSROOM','fa-hashtag')">
       <div class="ic"><i class="fa-solid fa-hashtag"></i></div><div class="name">Classroom Code</div><div class="code">Google Classroom</div>
     </div>
     <div class="card gclassroom" data-cat="academic" onclick="openClassroomHub()">
       <div class="ic"><i class="fa-solid fa-chalkboard"></i></div><div class="name">Google Classroom</div><div class="code">Synced Materials</div>
     </div>
-    <div class="card clsroutine" data-cat="academic" onclick="open_modal('Class Routine','Weekly Schedule','CLSROUTINE','fa-table-list')">
-    
-      <div class="ic"><i class="fa-solid fa-table-list"></i></div><div class="name">Class Routine</div><div class="code">Weekly Schedule</div>
-    </div>
-    <div class="card routine" data-cat="academic" onclick="open_modal('Exam Routine','No Exam Currently','ROUTINE','fa-calendar-days')">
-  
-      <div class="ic"><i class="fa-solid fa-calendar-days"></i></div><div class="name">Exam Routine</div><div class="code">No Exam Currently</div>
-    </div>
 
-    <div class="card hackathon" data-cat="competitive" onclick="open_modal('Upcoming Hackathon','Events','HACKATHON','fa-laptop-code')">
-   
-      <div class="ic"><i class="fa-solid fa-laptop-code"></i></div><div class="name">Upcoming Hackathon</div><div class="code">Events</div>
-    </div>
-    <div class="card cp" data-cat="competitive" onclick="open_modal('Upcoming CP','Contests','CP','fa-trophy')">
-   
-      <div class="ic"><i class="fa-solid fa-trophy"></i></div><div class="name">Upcoming CP</div><div class="code">Contests</div>
-    </div>
-
-    <div class="card links" data-cat="study" onclick="open_modal('Reference Links','External Resources','LINKS','fa-link')">
-     
-      <div class="ic"><i class="fa-solid fa-link"></i></div><div class="name">Reference Links</div><div class="code">External Resources</div>
-    </div>
-    <div class="card books" data-cat="study" onclick="open_modal('Books','Library','BOOKS','fa-book')">
-     
-      <div class="ic"><i class="fa-solid fa-book"></i></div><div class="name">Books</div><div class="code">Library</div>
-    </div>
-    <div class="card sug" data-cat="study" onclick="open_modal('Suggestions','All Subjects','SUG','fa-lightbulb')">
-   
-      <div class="ic"><i class="fa-solid fa-lightbulb"></i></div><div class="name">Suggestions</div><div class="code">All Subjects</div>
-    </div>
+    <!-- ===== STUDY MATERIAL ===== -->
     <div class="card note" data-cat="study" onclick="open_modal('Notes','All Subjects','NOTES','fa-book-open')">
-
       <div class="ic"><i class="fa-solid fa-book-open"></i></div><div class="name">Notes</div><div class="code">All Subjects</div>
     </div>
     <div class="card pqs" data-cat="study" onclick="open_modal('PQ Solutions','Previous Questions','PQS','fa-scroll')">
-
       <div class="ic"><i class="fa-solid fa-scroll"></i></div><div class="name">PQ Solutions</div><div class="code">All Subjects</div>
     </div>
+    <div class="card books" data-cat="study" onclick="open_modal('Books','Library','BOOKS','fa-book')">
+      <div class="ic"><i class="fa-solid fa-book"></i></div><div class="name">Books</div><div class="code">Library</div>
+    </div>
+    <div class="card links" data-cat="study" onclick="open_modal('Reference Links','External Resources','LINKS','fa-link')">
+      <div class="ic"><i class="fa-solid fa-link"></i></div><div class="name">Reference Links</div><div class="code">External Resources</div>
+    </div>
 
-    <div class="card sub" data-cat="subjects" onclick="open_modal('DSA 2','CSE0613221/222','DSA2','fa-sitemap')">
-  
-      <div class="ic"><i class="fa-solid fa-sitemap"></i></div><div class="name">DSA 2</div><div class="code">CSE0613221/222</div>
+    <!-- ===== COMPETITIVE ===== -->
+    <div class="card hackathon" data-cat="competitive" onclick="open_modal('Upcoming Hackathon','Events','HACKATHON','fa-laptop-code')">
+      <div class="ic"><i class="fa-solid fa-laptop-code"></i></div><div class="name">Upcoming Hackathon</div><div class="code">Events</div>
     </div>
-    <div class="card sub" data-cat="subjects" onclick="open_modal('Software Engg','CSE0613225/226','SE','fa-diagram-project')">
-      
-      <div class="ic"><i class="fa-solid fa-diagram-project"></i></div><div class="name">Software Engg</div><div class="code">CSE0613225/226</div>
-    </div>
-    <div class="card sub" data-cat="subjects" onclick="open_modal('Complex Variables','MATH0541221','MATH','fa-square-root-variable')">
-
-      <div class="ic"><i class="fa-solid fa-square-root-variable"></i></div><div class="name">Complex Variables</div><div class="code">MATH0541221</div>
-    </div>
-    <div class="card sub" data-cat="subjects" onclick="open_modal('Numerical Methods','CSE0541227','NUM','fa-calculator')">
-      
-      <div class="ic"><i class="fa-solid fa-calculator"></i></div><div class="name">Numerical Methods</div><div class="code">CSE0541227</div>
-    </div>
-    <div class="card sub" data-cat="subjects" onclick="open_modal('Data Communication','CSE0612223','DCOM','fa-network-wired')">
-  
-      <div class="ic"><i class="fa-solid fa-network-wired"></i></div><div class="name">Data Comm.</div><div class="code">CSE0612223</div>
-    </div>
-    <div class="card sub" data-cat="subjects" onclick="open_modal('Internet Prog. Lab','CSE0613208','IPLAB','fa-globe')">
-  
-      <div class="ic"><i class="fa-solid fa-globe"></i></div><div class="name">Internet Prog. Lab</div><div class="code">CSE0613208</div>
+    <div class="card cp" data-cat="competitive" onclick="open_modal('Upcoming CP','Contests','CP','fa-trophy')">
+      <div class="ic"><i class="fa-solid fa-trophy"></i></div><div class="name">Upcoming CP</div><div class="code">Contests</div>
     </div>
 
   </div>
@@ -887,7 +875,8 @@ body.light .vault-web-tab.active { background: rgba(130,80,223,0.08); color: #82
   updateFilterCounts();
 </script>
 <!-- Firebase integration for the main portal -->
-<script type="module" src="assets/js/main.js"></script>
+<script type="module" src="assets/js/main.js">
+</script>
 <script src="assets/js/chatbot.js"></script>
 </body>
 </html>
