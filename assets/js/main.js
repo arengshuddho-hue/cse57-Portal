@@ -1188,16 +1188,3 @@ import { onDisconnect, push as presencePush, runTransaction, serverTimestamp } f
   runTransaction(ref(db, 'stats/totalVisits'), (current) => (current || 0) + 1);
 })();
 
-// ===== Exam Notice Popup (public side) =====
-let noticeEnabled = false;
-let noticeItems = [];
-let globalLink = { url: '', label: '' };
-
-function todayStr() {
-  const now = new Date();
-  const dhaka = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }));
-  const y = dhaka.getFullYear();
-  const m = String(dhaka.getMonth() + 1).padStart(2, '0');
-  const d = String(dhaka.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
