@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cse57c-portal-v1';
+const CACHE_NAME = 'cse57c-portal-v2';
 
 const PRECACHE_URLS = [
   './',
@@ -33,7 +33,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const req = event.request;
 
-  
+
   if (req.mode === 'navigate') {
     event.respondWith(
       fetch(req)
@@ -63,7 +63,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  
+
   event.respondWith(
     caches.match(req).then((cached) => {
       const fetchPromise = fetch(req)

@@ -1,5 +1,5 @@
 ﻿﻿import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getDatabase, ref, onValue, set, push } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+import { getDatabase, ref, onValue, set, push, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
 const firebaseConfig = {
@@ -23,7 +23,141 @@ const db = getDatabase(app);
 const auth = getAuth(app);
 
 let dbData = {};
+// ===== Card Layout Manager =====
+const ALL_CARDS = [
+  { id: 'ROUTINE',    name: 'Exam Routine',       icon: 'fa-calendar-days',        cat: 'academic' },
+  { id: 'SUG',        name: 'Suggestions',        icon: 'fa-lightbulb',            cat: 'study' },
+  { id: 'NOTES',      name: 'Notes',              icon: 'fa-book-open',            cat: 'study' },
+  { id: 'DSA2',       name: 'DSA 2',              icon: 'fa-sitemap',              cat: 'subjects' },
+  { id: 'SE',         name: 'Software Engg',      icon: 'fa-diagram-project',      cat: 'subjects' },
+  { id: 'MATH',       name: 'Complex Variables',  icon: 'fa-square-root-variable', cat: 'subjects' },
+  { id: 'NUM',        name: 'Numerical Methods',  icon: 'fa-calculator',           cat: 'subjects' },
+  { id: 'DCOM',       name: 'Data Comm.',         icon: 'fa-network-wired',        cat: 'subjects' },
+  { id: 'IPLAB',      name: 'Internet Prog. Lab', icon: 'fa-globe',                cat: 'subjects' },
+  { id: 'VAULT',      name: 'Note Vault',         icon: 'fa-key',                  cat: 'personal' },
+  { id: 'UPDATE',     name: 'Update Files',       icon: 'fa-cloud-arrow-up',       cat: 'personal' },
+  { id: 'CLSROUTINE', name: 'Class Routine',      icon: 'fa-table-list',           cat: 'academic' },
+  { id: 'COURSES',    name: 'Upcoming Courses',   icon: 'fa-graduation-cap',       cat: 'academic' },
+  { id: 'FACULTY',    name: 'Faculty List',       icon: 'fa-chalkboard-user',      cat: 'academic' },
+  { id: 'CLASSROOM',  name: 'Classroom Code',     icon: 'fa-hashtag',              cat: 'academic' },
+  { id: 'GCLASSROOM', name: 'Google Classroom',   icon: 'fa-chalkboard',           cat: 'academic' },
+  { id: 'PQS',        name: 'PQ Solutions',       icon: 'fa-scroll',               cat: 'study' },
+  { id: 'BOOKS',      name: 'Books',              icon: 'fa-book',                 cat: 'study' },
+  { id: 'LINKS',      name: 'Reference Links',    icon: 'fa-link',                 cat: 'study' },
+  { id: 'HACKATHON',  name: 'Upcoming Hackathon', icon: 'fa-laptop-code',          cat: 'competitive' },
+  { id: 'CP',         name: 'Upcoming CP',        icon: 'fa-trophy',               cat: 'competitive' }
+];
 
+let cardLayout = null;   // [{id, hidden}]
+let dragIndex = null;
+
+function buildLayoutFromConfig(saved) {
+  // saved = array of {id, hidden} from Firebase (may be null/outdated)
+  const result = [];
+  const seen = new Set();
+  if (Array.isArray(saved)) {
+    saved.forEach(s => {
+      if (ALL_CARDS.find(c => c.id === s.id) && !seen.has(s.id)) {
+        result.push({ id: s.id, hidden: !!s.hidden });
+        seen.add(s.id);
+      }
+    });
+  }
+  // new cards that aren't saved yet go to the end (visible)
+  ALL_CARDS.forEach(c => {
+    if (!seen.has(c.id)) result.push({ id: c.id, hidden: false });
+  });
+  return result;
+}
+
+window.renderCardLayout = function () {
+  const box = document.getElementById('cardLayoutList');
+  if (!box || !cardLayout) return;
+  box.innerHTML = '';
+
+  cardLayout.forEach((entry, index) => {
+    const meta = ALL_CARDS.find(c => c.id === entry.id);
+    if (!meta) return;
+
+    const row = document.createElement('div');
+    row.className = 'layout-row' + (entry.hidden ? ' is-hidden' : '');
+    row.draggable = true;
+    row.dataset.index = index;
+
+    row.innerHTML = `
+      <span class="layout-handle"><i class="fa-solid fa-grip-vertical"></i></span>
+      <div class="layout-icon"><i class="fa-solid ${meta.icon}"></i></div>
+      <div class="layout-name">${meta.name}</div>
+      <span class="layout-cat">${meta.cat}</span>
+      <button class="layout-btn" title="Move up" onclick="moveCard(${index}, -1)"><i class="fa-solid fa-arrow-up"></i></button>
+      <button class="layout-btn" title="Move down" onclick="moveCard(${index}, 1)"><i class="fa-solid fa-arrow-down"></i></button>
+      <button class="layout-btn ${entry.hidden ? 'eye-off' : 'eye-on'}" title="${entry.hidden ? 'Show' : 'Hide'}" onclick="toggleCardHidden(${index})">
+        <i class="fa-solid ${entry.hidden ? 'fa-eye-slash' : 'fa-eye'}"></i>
+      </button>
+    `;
+
+    // Drag & drop (desktop)
+    row.addEventListener('dragstart', (e) => {
+      dragIndex = index;
+      row.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    row.addEventListener('dragend', () => {
+      row.classList.remove('dragging');
+      document.querySelectorAll('.layout-row').forEach(r => r.classList.remove('drag-over'));
+    });
+    row.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      row.classList.add('drag-over');
+    });
+    row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
+    row.addEventListener('drop', (e) => {
+      e.preventDefault();
+      if (dragIndex === null || dragIndex === index) return;
+      const moved = cardLayout.splice(dragIndex, 1)[0];
+      cardLayout.splice(index, 0, moved);
+      dragIndex = null;
+      window.renderCardLayout();
+    });
+
+    box.appendChild(row);
+  });
+};
+
+window.moveCard = function (index, dir) {
+  const target = index + dir;
+  if (target < 0 || target >= cardLayout.length) return;
+  const tmp = cardLayout[index];
+  cardLayout[index] = cardLayout[target];
+  cardLayout[target] = tmp;
+  window.renderCardLayout();
+};
+
+window.toggleCardHidden = function (index) {
+  cardLayout[index].hidden = !cardLayout[index].hidden;
+  window.renderCardLayout();
+};
+
+window.saveCardLayout = async function () {
+  const btn = document.getElementById('saveLayoutBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+  try {
+    await set(ref(db, 'portalConfig/cards'), cardLayout);
+    alert('Layout saved! User section e live update hoye jabe.');
+  } catch (err) {
+    alert('Save failed: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Layout';
+  }
+};
+
+window.resetCardLayout = function () {
+  if (!confirm('Default order e ferot jabe (shob card visible). Sure?')) return;
+  cardLayout = ALL_CARDS.map(c => ({ id: c.id, hidden: false }));
+  window.renderCardLayout();
+};
 onAuthStateChanged(auth, (user) => {
   if (user) {
     document.getElementById('loginScreen').style.display = 'none';
@@ -44,6 +178,12 @@ onAuthStateChanged(auth, (user) => {
     onValue(ref(db, 'stats/totalVisits'), (snap) => {
       const el = document.getElementById('statTotalVisits');
       if(el) el.textContent = snap.exists() ? snap.val() : 0;
+    });
+
+    // Card layout config
+    onValue(ref(db, 'portalConfig/cards'), (snap) => {
+      cardLayout = buildLayoutFromConfig(snap.val());
+      window.renderCardLayout();
     });
   } else {
     document.getElementById('loginScreen').style.display = 'block';
@@ -200,11 +340,14 @@ window.addItem = async function() {
   try {
     await set(ref(db, 'portalData'), dbData);
 
-    await push(ref(db, 'notifications'), {
-      category: category,
-      title: valToSave.title || 'Update',
-      timestamp: Date.now()
-    });
+    const isSecretCategory = category === 'SECRETC' || category === 'secret' || /secret/i.test(category);
+    if (!isSecretCategory) {
+      await push(ref(db, 'notifications'), {
+        category: category,
+        title: valToSave.title || 'Update',
+        timestamp: Date.now()
+      });
+    }
 
     document.getElementById('itemTitle').value = '';
     document.getElementById('itemContent').value = '';
@@ -287,3 +430,33 @@ window.syncClassroom = async function() {
   }
 };
 
+// Clean up any accidentally pushed secret notifications from database
+onValue(ref(db, 'notifications'), (snap) => {
+  const val = snap.val();
+  if (val) {
+    Object.entries(val).forEach(([id, n]) => {
+      if (n && (n.category === 'SECRETC' || /secret/i.test(n.category || '') || /section c/i.test(n.title || ''))) {
+        remove(ref(db, `notifications/${id}`)).catch(() => {});
+      }
+    });
+  }
+}, { onlyOnce: true });
+
+// ===== Secret Section C password =====
+async function sha256(text) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+window.setSecretPass = async function () {
+  const input = document.getElementById('secretPassNew');
+  const pass = input.value.trim();
+  if (pass.length < 4) return alert('Kom-pokkhe 4 character dao.');
+  try {
+    await set(ref(db, 'portalConfig/secretHash'), await sha256(pass));
+    input.value = '';
+    alert('Password set hoyeche!');
+  } catch (err) {
+    alert('Failed: ' + err.message);
+  }
+};

@@ -343,3 +343,81 @@ h3[style*="color: var(--gold)"] {
   .item-content { margin-right: 0; }
   .btn-danger { text-align: center; }
 }
+/* ===== Card Layout Manager ===== */
+.layout-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.layout-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  transition: all 0.2s;
+  user-select: none;
+}
+.layout-row.dragging { opacity: 0.4; }
+.layout-row.drag-over {
+  border-color: var(--accent-purple);
+  box-shadow: 0 0 0 2px rgba(163,113,247,0.25);
+}
+.layout-row.is-hidden { opacity: 0.5; }
+.layout-row.is-hidden .layout-name { text-decoration: line-through; }
+
+.layout-handle {
+  cursor: grab;
+  color: var(--text-muted);
+  padding: 4px 6px;
+  font-size: 14px;
+}
+.layout-handle:active { cursor: grabbing; }
+
+.layout-icon {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(163,113,247,0.1);
+  color: var(--accent-purple);
+  flex-shrink: 0;
+}
+.layout-name {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.layout-cat {
+  font-size: 10px;
+  font-family: monospace;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.05);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+}
+.layout-btn {
+  width: 32px; height: 32px;
+  border-radius: 7px;
+  border: 1px solid var(--border-color);
+  background: #21262d;
+  color: var(--text-main);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0;
+  transition: all 0.2s;
+}
+.layout-btn:hover { border-color: var(--accent-purple); color: var(--accent-purple); }
+.layout-btn.eye-on { color: #56d364; }
+.layout-btn.eye-off { color: #f85149; }
+
+@media (max-width: 600px) {
+  .layout-cat { display: none; }
+}

@@ -77,6 +77,29 @@
     <button class="btn" id="classroomSyncBtn" onclick="syncClassroom()"><i class="fa-solid fa-rotate"></i> Sync from Classroom</button>
   </div>
   <div id="classroomSyncResult" style="margin-bottom: 20px;"></div>
+  <!-- Secret Password -->
+<div style="background: rgba(226,185,111,0.06); border: 1px solid rgba(226,185,111,0.25); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+  <div style="font-weight:600; color:var(--text-main); margin-bottom:6px;"><i class="fa-solid fa-lock"></i> Section C Password</div>
+  <div style="font-size:0.8em; color:#8b949e; margin-bottom:14px;">Secret card khulte ei password lagbe. Notun password dile purano ta bodle jabe.</div>
+  <div style="display:flex; gap:10px; flex-wrap:wrap;">
+    <input type="text" id="secretPassNew" placeholder="New password" style="flex:1; min-width:180px;">
+    <button class="btn" onclick="setSecretPass()"><i class="fa-solid fa-key"></i> Set Password</button>
+  </div>
+</div>
+  <!-- Card Layout Manager -->
+<div style="background: rgba(163,113,247,0.05); border: 1px solid rgba(163,113,247,0.2); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+  <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:6px;">
+    <div style="font-weight:600; color:var(--text-main);"><i class="fa-solid fa-table-cells-large"></i> Card Layout Manager</div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <button class="btn" style="padding:8px 14px; font-size:13px; background:#21262d; border:1px solid #30363d;" onclick="resetCardLayout()"><i class="fa-solid fa-rotate-left"></i> Reset</button>
+      <button class="btn" id="saveLayoutBtn" style="padding:8px 14px; font-size:13px;" onclick="saveCardLayout()"><i class="fa-solid fa-floppy-disk"></i> Save Layout</button>
+    </div>
+  </div>
+  <div style="font-size:0.8em; color:#8b949e; margin-bottom:16px;">
+    Drag kore (ba ↑ ↓ button diye) order thik koro. 👁 diye hide/show koro. Shesh e "Save Layout" chapo.
+  </div>
+  <div id="cardLayoutList" class="layout-list"></div>
+</div>
   
   <div class="form-group">
     <label for="categorySelect" style="color: var(--gold); font-size: 16px;">📂 Select Category to Manage</label>
@@ -101,6 +124,7 @@
       <option value="NOTES">Notes</option>
       <option value="SUG">Suggestions</option>
       <option value="BOOKS">Books</option>
+      <option value="SECRETC">🔒 Section C (Secret Notes)</option>
     </select>
   </div>
 

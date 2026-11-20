@@ -1,4 +1,4 @@
-﻿// ===== Service Worker Registration (PWA) =====
+// ===== Service Worker Registration (PWA) =====
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./service-worker.js').catch(console.error);
@@ -26,6 +26,162 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+
+// ===== Apply admin-defined card layout =====
+const LAYOUT_CACHE_KEY = 'cse57_card_layout';
+
+function applyCardLayout(layout) {
+  const grid = document.getElementById('mainGrid');
+  if (!grid || !Array.isArray(layout)) return;
+
+  const cardMap = {};
+  grid.querySelectorAll('.card[data-id]').forEach(c => { cardMap[c.dataset.id] = c; });
+
+  // reorder + hide/show
+  layout.forEach(entry => {
+    const el = cardMap[entry.id];
+    if (!el) return;
+    grid.appendChild(el);
+    el.classList.toggle('admin-hidden', !!entry.hidden);
+    delete cardMap[entry.id];
+  });
+
+  // layout-e nei emon card (new card) -> shesh e, visible
+  Object.values(cardMap).forEach(el => {
+    grid.appendChild(el);
+    el.classList.remove('admin-hidden');
+  });
+
+  // Keep secret card at the end of the grid so it stays in place
+  const secretCard = grid.querySelector('.secret-card');
+  if (secretCard) grid.appendChild(secretCard);
+
+  if (typeof updateFilterCounts === 'function') updateFilterCounts();
+}
+
+// cache theke age apply (flash komate)
+try {
+  const cachedLayout = localStorage.getItem(LAYOUT_CACHE_KEY);
+  if (cachedLayout) {
+    const parsed = JSON.parse(cachedLayout);
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => applyCardLayout(parsed));
+    } else {
+      applyCardLayout(parsed);
+    }
+  }
+} catch (e) {}
+
+// live listener
+onValue(ref(db, 'portalConfig/cards'), (snap) => {
+  const layout = snap.val();
+  if (layout) {
+    applyCardLayout(layout);
+    try { localStorage.setItem(LAYOUT_CACHE_KEY, JSON.stringify(layout)); } catch (e) {}
+  }
+});
+
+// ===== Secret Section C =====
+let secretHash = null;
+onValue(ref(db, 'portalConfig/secretHash'), (snap) => { secretHash = snap.val(); });
+
+async function sha256(text) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function toggleSecretCard() {
+  const card = document.querySelector('.secret-card');
+  if (!card) return;
+  card.classList.remove('hidden');
+  const isRevealed = card.classList.toggle('revealed');
+  if (isRevealed) {
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    card.classList.add('secret-pulse');
+    setTimeout(() => card.classList.remove('secret-pulse'), 1300);
+  }
+}
+window.toggleSecretCard = toggleSecretCard;
+
+// Desktop: Alt + Q ba keyboard-e "secret" type kora
+let secretBuffer = '';
+document.addEventListener('keydown', (e) => {
+  // Check for Alt + Q (handles left Alt, right Alt / AltGr, shift/caps variants, and various keyboard layouts)
+  const isAlt = e.altKey || (typeof e.getModifierState === 'function' && e.getModifierState('Alt'));
+  const isQ = e.code === 'KeyQ' || (e.key && e.key.toLowerCase() === 'q') || e.key === 'œ';
+
+  if (isAlt && isQ) {
+    e.preventDefault();
+    toggleSecretCard();
+    return;
+  }
+
+  const tag = (e.target.tagName || '').toLowerCase();
+  if (tag === 'input' || tag === 'textarea' || e.target.isContentEditable) return;
+
+  if (e.key && e.key.length === 1) {
+    secretBuffer = (secretBuffer + e.key.toLowerCase()).slice(-6);
+    if (secretBuffer === 'secret') {
+      secretBuffer = '';
+      toggleSecretCard();
+    }
+  }
+});
+
+// Mobile: navbar logo 5 bar tap (3 second er moddhe)
+(function () {
+  let taps = 0, timer = null;
+  function attach() {
+    const logo = document.querySelector('.nav-logo');
+    if (!logo) return;
+    logo.addEventListener('click', () => {
+      taps++;
+      clearTimeout(timer);
+      timer = setTimeout(() => { taps = 0; }, 3000);
+      if (taps >= 5) { taps = 0; toggleSecretCard(); }
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', attach);
+  } else {
+    attach();
+  }
+})();
+
+window.openSecretGate = function () {
+  if (sessionStorage.getItem('sc_ok') === '1') {
+    return window.open_modal('Section C', 'Private Notes', 'SECRETC', 'fa-lock');
+  }
+  document.getElementById('m-title').textContent = 'Section C';
+  document.getElementById('m-code').textContent = 'Password required';
+  document.getElementById('m-icon').className = 'fa-solid fa-lock';
+  document.getElementById('m-pdfs').innerHTML = `
+    <input type="password" id="secretPassInput" class="vault-input" placeholder="Enter password" autocomplete="off"
+           onkeydown="if(event.key==='Enter') checkSecretPass()">
+    <button class="vault-btn" onclick="checkSecretPass()"><i class="fa-solid fa-unlock"></i> Unlock</button>
+    <div id="secretMsg"></div>`;
+  document.getElementById('overlay').classList.add('on');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => { const i = document.getElementById('secretPassInput'); if (i) i.focus(); }, 60);
+};
+
+window.checkSecretPass = async function () {
+  const input = document.getElementById('secretPassInput');
+  const msg = document.getElementById('secretMsg');
+  if (!input || !msg) return;
+  if (!secretHash) {
+    msg.innerHTML = '<div class="vault-msg err"><i class="fa-solid fa-circle-exclamation"></i><div>Password ekhono set kora hoy nai.</div></div>';
+    return;
+  }
+  const h = await sha256(input.value);
+  if (h === secretHash) {
+    sessionStorage.setItem('sc_ok', '1');
+    window.open_modal('Section C', 'Private Notes', 'SECRETC', 'fa-lock');
+  } else {
+    msg.innerHTML = '<div class="vault-msg err"><i class="fa-solid fa-circle-exclamation"></i><div>Wrong password.</div></div>';
+    input.value = '';
+  }
+};
 
 window.data = window.data || {};
 
@@ -950,6 +1106,7 @@ onValue(ref(db, 'notifications'), (snapshot) => {
   const val = snapshot.val() || {};
   notifications = Object.entries(val)
     .map(([id, n]) => ({ id, ...n }))
+    .filter(n => n && n.category !== 'SECRETC' && !/^secret/i.test(n.category || '') && !/section c/i.test(n.title || ''))
     .sort((a, b) => b.timestamp - a.timestamp)
     .slice(0, 30);
   renderNotifications();
@@ -1187,4 +1344,3 @@ import { onDisconnect, push as presencePush, runTransaction, serverTimestamp } f
 
   runTransaction(ref(db, 'stats/totalVisits'), (current) => (current || 0) + 1);
 })();
-
