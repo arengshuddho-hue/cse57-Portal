@@ -1,5 +1,5 @@
 ﻿﻿import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getDatabase, ref, onValue, set, push, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+import { getDatabase, ref, onValue, set, push, remove, query, limitToLast } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
 const firebaseConfig = {
@@ -168,16 +168,78 @@ onAuthStateChanged(auth, (user) => {
       window.renderItems();
     });
 
-    // Live stats: active visitors + total visits
+    // Live stats & device tracking
     onValue(ref(db, 'presence'), (snap) => {
-      const count = snap.exists() ? Object.keys(snap.val()).length : 0;
+      const data = snap.val() || {};
+      const count = snap.exists() ? Object.keys(data).length : 0;
       const el = document.getElementById('statActiveNow');
       if(el) el.textContent = count;
+
+      // Update active devices list
+      const devicesBox = document.getElementById('activeDevicesList');
+      if (devicesBox) {
+        const entries = Object.values(data);
+        if (entries.length === 0) {
+          devicesBox.innerHTML = '<span style="color:#8b949e; font-size:0.85em;">No active visitors</span>';
+        } else {
+          devicesBox.innerHTML = entries.map(item => {
+            const icon = item.device === 'Mobile' ? 'fa-mobile-screen' : (item.device === 'Tablet' ? 'fa-tablet-screen-button' : 'fa-laptop');
+            const os = escapeHtml(item.os || 'Unknown OS');
+            const browser = escapeHtml(item.browser || 'Browser');
+            return `<span style="display:inline-flex; align-items:center; gap:6px; background:rgba(86,211,100,0.1); border:1px solid rgba(86,211,100,0.25); color:#56d364; border-radius:20px; padding:4px 10px; font-size:0.8em;"><i class="fa-solid ${icon}"></i> ${os} · ${browser}</span>`;
+          }).join('');
+        }
+      }
     });
 
     onValue(ref(db, 'stats/totalVisits'), (snap) => {
       const el = document.getElementById('statTotalVisits');
       if(el) el.textContent = snap.exists() ? snap.val() : 0;
+    });
+
+    // Recent visitor logs
+    const visitorQuery = query(ref(db, 'recentVisitors'), limitToLast(40));
+    onValue(visitorQuery, (snap) => {
+      const logsBox = document.getElementById('visitorLogsList');
+      const badge = document.getElementById('visitorCountBadge');
+      if (!logsBox) return;
+      if (!snap.exists()) {
+        logsBox.innerHTML = '<div style="color:#8b949e; font-size:0.85em; text-align:center; padding:15px;">No visitor logs yet.</div>';
+        if (badge) badge.textContent = '0 visits logged';
+        return;
+      }
+      const raw = snap.val();
+      const list = Object.entries(raw).map(([k, v]) => ({ id: k, ...v })).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+      if (badge) badge.textContent = `${list.length} recent visits`;
+
+      logsBox.innerHTML = list.map(v => {
+        const icon = v.device === 'Mobile' ? 'fa-mobile-screen' : (v.device === 'Tablet' ? 'fa-tablet-screen-button' : 'fa-laptop');
+        const os = escapeHtml(v.os || 'Unknown OS');
+        const browser = escapeHtml(v.browser || 'Browser');
+        const screen = escapeHtml(v.screen || '');
+        const isNew = !!v.isNew;
+        const count = v.visitCount || 1;
+        const refName = escapeHtml(v.referrer || 'Direct');
+        const timeAgo = getTimeAgo(v.timestamp || Date.now());
+
+        return `
+          <div style="display:flex; align-items:center; justify-content:space-between; background:var(--bg-color); border:1px solid var(--border-color); border-radius:8px; padding:8px 12px; font-size:0.85em; gap:8px; flex-wrap:wrap;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <i class="fa-solid ${icon}" style="color:var(--accent-purple); font-size:1.1em; width:16px; text-align:center;"></i>
+              <div>
+                <span style="font-weight:600; color:var(--text-main);">${os} · ${browser}</span>
+                ${screen ? `<span style="color:#8b949e; font-size:0.85em; margin-left:6px;">(${screen})</span>` : ''}
+                <span style="color:#8b949e; font-size:0.8em; margin-left:6px;"><i class="fa-solid fa-arrow-turn-down-right" style="font-size:0.7em;"></i> ${refName}</span>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:0.75em; padding:2px 8px; border-radius:12px; background:${isNew ? 'rgba(63,185,80,0.15)' : 'rgba(163,113,247,0.15)'}; color:${isNew ? '#56d364' : '#a371f7'};">
+                ${isNew ? 'New Visitor' : 'Visit #' + count}
+              </span>
+              <span style="color:#8b949e; font-size:0.8em;">${timeAgo}</span>
+            </div>
+          </div>`;
+      }).join('');
     });
 
     // Card layout config
@@ -460,3 +522,24 @@ window.setSecretPass = async function () {
     alert('Failed: ' + err.message);
   }
 };
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function getTimeAgo(ts) {
+  const diff = Date.now() - ts;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return mins + 'm ago';
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + 'h ago';
+  const days = Math.floor(hrs / 24);
+  return days + 'd ago';
+}

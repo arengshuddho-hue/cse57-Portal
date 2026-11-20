@@ -128,19 +128,30 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-// Mobile: navbar logo 5 bar tap (3 second er moddhe)
+// Mobile: navbar logo 3 bar tap (3 second er moddhe)
 (function () {
   let taps = 0, timer = null;
+  function handleTap(e) {
+    taps++;
+    clearTimeout(timer);
+    timer = setTimeout(() => { taps = 0; }, 3000);
+    if (taps >= 3) {
+      taps = 0;
+      toggleSecretCard();
+    }
+  }
+
   function attach() {
     const logo = document.querySelector('.nav-logo');
     if (!logo) return;
-    logo.addEventListener('click', () => {
-      taps++;
-      clearTimeout(timer);
-      timer = setTimeout(() => { taps = 0; }, 3000);
-      if (taps >= 5) { taps = 0; toggleSecretCard(); }
-    });
+    logo.addEventListener('click', handleTap);
+    logo.addEventListener('touchend', (e) => {
+      // Prevent artificial click delay on mobile touch
+      e.preventDefault();
+      handleTap(e);
+    }, { passive: false });
   }
+
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', attach);
   } else {
@@ -1337,10 +1348,94 @@ window.switchViewWebPanel = function(btn, panel){
 
 import { onDisconnect, push as presencePush, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-(function trackPresence(){
-  const presenceRef = presencePush(ref(db, 'presence'));
-  set(presenceRef, { connectedAt: serverTimestamp() });
-  onDisconnect(presenceRef).remove();
+function getDeviceInfo() {
+  const ua = navigator.userAgent || '';
+  let deviceType = 'Desktop';
+  if (/mobile/i.test(ua)) deviceType = 'Mobile';
+  else if (/tablet|ipad/i.test(ua)) deviceType = 'Tablet';
 
-  runTransaction(ref(db, 'stats/totalVisits'), (current) => (current || 0) + 1);
+  let os = 'Unknown OS';
+  if (/windows nt 10/i.test(ua)) os = 'Windows 10/11';
+  else if (/windows/i.test(ua)) os = 'Windows';
+  else if (/android/i.test(ua)) os = 'Android';
+  else if (/iphone|ipad|ipod/i.test(ua)) os = 'iOS';
+  else if (/macintosh|mac os x/i.test(ua)) os = 'macOS';
+  else if (/linux/i.test(ua)) os = 'Linux';
+  else if (/cros/i.test(ua)) os = 'Chrome OS';
+
+  let browser = 'Unknown Browser';
+  if (/edg\//i.test(ua)) browser = 'Edge';
+  else if (/opr\/|opera/i.test(ua)) browser = 'Opera';
+  else if (/samsungbrowser/i.test(ua)) browser = 'Samsung Internet';
+  else if (/chrome|crios/i.test(ua)) browser = 'Chrome';
+  else if (/firefox|fxios/i.test(ua)) browser = 'Firefox';
+  else if (/safari/i.test(ua) && !/chrome/i.test(ua)) browser = 'Safari';
+
+  const screenRes = `${window.screen?.width || 0}x${window.screen?.height || 0}`;
+  return { deviceType, os, browser, screenRes };
+}
+
+(function trackPresence(){
+  // Ignore bots and web crawlers to protect SEO score and keep visitor logs clean
+  if (/bot|googlebot|crawler|spider|robot|crawling/i.test(navigator.userAgent || '')) return;
+
+  const initTracking = () => {
+    try {
+      let vid = localStorage.getItem('cse57_vid');
+      let visitCount = parseInt(localStorage.getItem('cse57_vcount') || '0', 10) + 1;
+      let isNew = !vid;
+      if (!vid) {
+        vid = 'v_' + Math.random().toString(36).slice(2, 9);
+        localStorage.setItem('cse57_vid', vid);
+      }
+      localStorage.setItem('cse57_vcount', visitCount);
+
+      const dev = getDeviceInfo();
+      let referrer = 'Direct';
+      try {
+        if (document.referrer) {
+          const u = new URL(document.referrer);
+          referrer = u.hostname.replace(/^www\./, '');
+        }
+      } catch (e) {}
+
+      // 1. Live presence with active device information
+      const presenceRef = presencePush(ref(db, 'presence'));
+      set(presenceRef, {
+        vid,
+        device: dev.deviceType,
+        os: dev.os,
+        browser: dev.browser,
+        screen: dev.screenRes,
+        connectedAt: serverTimestamp()
+      });
+      onDisconnect(presenceRef).remove();
+
+      // 2. Increment total visits counter
+      runTransaction(ref(db, 'stats/totalVisits'), (current) => (current || 0) + 1);
+
+      // 3. Log visitor entry to recentVisitors
+      const logRef = presencePush(ref(db, 'recentVisitors'));
+      set(logRef, {
+        vid,
+        device: dev.deviceType,
+        os: dev.os,
+        browser: dev.browser,
+        screen: dev.screenRes,
+        isNew,
+        visitCount,
+        referrer,
+        timestamp: Date.now()
+      });
+    } catch (err) {
+      console.warn('Presence tracking:', err);
+    }
+  };
+
+  // Run asynchronously without blocking initial render/FCP (SEO safe)
+  if (document.readyState === 'complete') {
+    setTimeout(initTracking, 600);
+  } else {
+    window.addEventListener('load', () => setTimeout(initTracking, 600));
+  }
 })();

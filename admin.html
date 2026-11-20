@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -67,6 +67,36 @@
     <div style="flex:1; min-width:140px; background:rgba(88,166,255,0.06); border:1px solid rgba(88,166,255,0.2); border-radius:12px; padding:16px 20px;">
       <div style="font-size:0.7em; color:#8b949e; letter-spacing:1px; text-transform:uppercase; margin-bottom:6px;">👁 Total Visits</div>
       <div id="statTotalVisits" style="font-size:2em; font-weight:700; color:#58a6ff;">—</div>
+    </div>
+  </div>
+
+  <!-- Device & Visitor Tracking -->
+  <div style="background: rgba(56, 139, 253, 0.05); border: 1px solid rgba(56, 139, 253, 0.2); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+      <div style="font-weight:600; color:var(--text-main); font-size:15px;">
+        <i class="fa-solid fa-laptop-code"></i> Live Devices & Recent Visitors
+      </div>
+      <span id="visitorCountBadge" style="font-size:0.75em; background:rgba(56,139,253,0.15); color:#58a6ff; padding:3px 10px; border-radius:20px; border:1px solid rgba(56,139,253,0.3);">
+        Updating live...
+      </span>
+    </div>
+
+    <!-- Active Devices Currently Online -->
+    <div style="margin-bottom: 14px;">
+      <div style="font-size:0.75em; color:#8b949e; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">
+        🟢 Online Right Now:
+      </div>
+      <div id="activeDevicesList" style="display:flex; gap:8px; flex-wrap:wrap;">
+        <span style="color:#8b949e; font-size:0.85em;">No active visitors</span>
+      </div>
+    </div>
+
+    <!-- Recent Visitor Logs -->
+    <div style="font-size:0.75em; color:#8b949e; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">
+      🕒 Recent Visits Log:
+    </div>
+    <div id="visitorLogsList" style="max-height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+      <div style="color:#8b949e; font-size:0.85em; text-align:center; padding:15px;">Loading visitor logs...</div>
     </div>
   </div>
     <div style="background: rgba(88,166,255,0.06); border: 1px solid rgba(88,166,255,0.2); border-radius: 12px; padding: 16px 20px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
