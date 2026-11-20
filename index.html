@@ -11,6 +11,33 @@
 <link rel="stylesheet" href="assets/css/chatbot.css">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0d1117">
+<script>
+  // Anti-flash: Immediately apply saved admin card layout before DOM renders
+  (function() {
+    try {
+      const cached = localStorage.getItem('cse57_card_layout');
+      if (cached) {
+        const layout = JSON.parse(cached);
+        if (Array.isArray(layout)) {
+          let css = '';
+          layout.forEach(entry => {
+            if (entry.hidden) {
+              css += `.card[data-id="${entry.id}"] { display: none !important; } `;
+            } else {
+              css += `.card[data-id="${entry.id}"] { display: flex !important; } `;
+            }
+          });
+          if (css) {
+            const style = document.createElement('style');
+            style.id = 'earlyCardLayout';
+            style.textContent = css;
+            document.head.appendChild(style);
+          }
+        }
+      }
+    } catch (e) {}
+  })();
+</script>
 <style>
   /* ===== Category Filter — Single Dropdown Button (GitHub style) ===== */
   .category-filter {
@@ -440,7 +467,7 @@ body.light .vault-web-tab.active { background: rgba(130,80,223,0.08); color: #82
     </div>
 
     <!-- ===== PERSONAL ===== -->
-    <div class="card vault" data-id="VAULT" data-cat="personal" onclick="openVaultModal()">
+    <div class="card vault admin-hidden" data-id="VAULT" data-cat="personal" onclick="openVaultModal()">
       <div class="ic"><i class="fa-solid fa-key"></i></div><div class="name">Note Vault</div><div class="code">Personal · Code Access</div>
     </div>
     <a class="card update" data-id="UPDATE" data-cat="personal" href="https://docs.google.com/forms/d/e/1FAIpQLSe-2_STuSi_r8w7z5zHcmCyaEonfVUlkwM5NPWI6WKWA51oFQ/viewform?usp=sharing&ouid=103587266722819910531" target="_blank">
@@ -448,38 +475,38 @@ body.light .vault-web-tab.active { background: rgba(130,80,223,0.08); color: #82
     </a>
 
     <!-- ===== ACADEMIC ===== -->
-    <div class="card clsroutine" data-id="CLSROUTINE" data-cat="academic" onclick="open_modal('Class Routine','Weekly Schedule','CLSROUTINE','fa-table-list')">
+    <div class="card clsroutine admin-hidden" data-id="CLSROUTINE" data-cat="academic" onclick="open_modal('Class Routine','Weekly Schedule','CLSROUTINE','fa-table-list')">
       <div class="ic"><i class="fa-solid fa-table-list"></i></div><div class="name">Class Routine</div><div class="code">Weekly Schedule</div>
     </div>
-    <div class="card courses" data-id="COURSES" data-cat="academic" onclick="open_modal('Upcoming Courses','Course List','COURSES','fa-graduation-cap')">
+    <div class="card courses admin-hidden" data-id="COURSES" data-cat="academic" onclick="open_modal('Upcoming Courses','Course List','COURSES','fa-graduation-cap')">
       <div class="ic"><i class="fa-solid fa-graduation-cap"></i></div><div class="name">Upcoming Courses</div><div class="code">Course List</div>
     </div>
-    <div class="card faculty" data-id="FACULTY" data-cat="academic" onclick="open_modal('Faculty List','Teachers & Advisors','FACULTY','fa-chalkboard-user')">
+    <div class="card faculty admin-hidden" data-id="FACULTY" data-cat="academic" onclick="open_modal('Faculty List','Teachers & Advisors','FACULTY','fa-chalkboard-user')">
       <div class="ic"><i class="fa-solid fa-chalkboard-user"></i></div><div class="name">Faculty List</div><div class="code">Teachers & Advisors</div>
     </div>
-    <div class="card classroom" data-id="CLASSROOM" data-cat="academic" onclick="open_modal('Classroom Code','Google Classroom','CLASSROOM','fa-hashtag')">
+    <div class="card classroom admin-hidden" data-id="CLASSROOM" data-cat="academic" onclick="open_modal('Classroom Code','Google Classroom','CLASSROOM','fa-hashtag')">
       <div class="ic"><i class="fa-solid fa-hashtag"></i></div><div class="name">Classroom Code</div><div class="code">Google Classroom</div>
     </div>
-    <div class="card gclassroom" data-id="GCLASSROOM" data-cat="academic" onclick="openClassroomHub()">
+    <div class="card gclassroom admin-hidden" data-id="GCLASSROOM" data-cat="academic" onclick="openClassroomHub()">
       <div class="ic"><i class="fa-solid fa-chalkboard"></i></div><div class="name">Google Classroom</div><div class="code">Synced Materials</div>
     </div>
 
     <!-- ===== STUDY MATERIAL ===== -->
-    <div class="card pqs" data-id="PQS" data-cat="study" onclick="open_modal('PQ Solutions','Previous Questions','PQS','fa-scroll')">
+    <div class="card pqs admin-hidden" data-id="PQS" data-cat="study" onclick="open_modal('PQ Solutions','Previous Questions','PQS','fa-scroll')">
       <div class="ic"><i class="fa-solid fa-scroll"></i></div><div class="name">PQ Solutions</div><div class="code">All Subjects</div>
     </div>
-    <div class="card books" data-id="BOOKS" data-cat="study" onclick="open_modal('Books','Library','BOOKS','fa-book')">
+    <div class="card books admin-hidden" data-id="BOOKS" data-cat="study" onclick="open_modal('Books','Library','BOOKS','fa-book')">
       <div class="ic"><i class="fa-solid fa-book"></i></div><div class="name">Books</div><div class="code">Library</div>
     </div>
-    <div class="card links" data-id="LINKS" data-cat="study" onclick="open_modal('Reference Links','External Resources','LINKS','fa-link')">
+    <div class="card links admin-hidden" data-id="LINKS" data-cat="study" onclick="open_modal('Reference Links','External Resources','LINKS','fa-link')">
       <div class="ic"><i class="fa-solid fa-link"></i></div><div class="name">Reference Links</div><div class="code">External Resources</div>
     </div>
 
     <!-- ===== COMPETITIVE ===== -->
-    <div class="card hackathon" data-id="HACKATHON" data-cat="competitive" onclick="open_modal('Upcoming Hackathon','Events','HACKATHON','fa-laptop-code')">
+    <div class="card hackathon admin-hidden" data-id="HACKATHON" data-cat="competitive" onclick="open_modal('Upcoming Hackathon','Events','HACKATHON','fa-laptop-code')">
       <div class="ic"><i class="fa-solid fa-laptop-code"></i></div><div class="name">Upcoming Hackathon</div><div class="code">Events</div>
     </div>
-    <div class="card cp" data-id="CP" data-cat="competitive" onclick="open_modal('Upcoming CP','Contests','CP','fa-trophy')">
+    <div class="card cp admin-hidden" data-id="CP" data-cat="competitive" onclick="open_modal('Upcoming CP','Contests','CP','fa-trophy')">
       <div class="ic"><i class="fa-solid fa-trophy"></i></div><div class="name">Upcoming CP</div><div class="code">Contests</div>
     </div>
 

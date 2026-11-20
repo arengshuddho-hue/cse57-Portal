@@ -56,6 +56,10 @@ function applyCardLayout(layout) {
   const secretCard = grid.querySelector('.secret-card');
   if (secretCard) grid.appendChild(secretCard);
 
+  // Remove pre-hide style once dynamic classes are applied
+  const earlyStyle = document.getElementById('earlyCardLayout');
+  if (earlyStyle) earlyStyle.remove();
+
   if (typeof updateFilterCounts === 'function') updateFilterCounts();
 }
 
