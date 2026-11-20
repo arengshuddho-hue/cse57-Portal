@@ -1,5 +1,5 @@
 ﻿﻿import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getDatabase, ref, onValue, set, push, remove, query, limitToLast } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+import { getDatabase, ref, onValue, set, push, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
 const firebaseConfig = {
@@ -169,7 +169,7 @@ onAuthStateChanged(auth, (user) => {
     });
 
     // Live stats & device tracking
-    onValue(ref(db, 'presence'), (snap) => {
+    onValue(ref(db, 'presence/active'), (snap) => {
       const data = snap.val() || {};
       const count = snap.exists() ? Object.keys(data).length : 0;
       const el = document.getElementById('statActiveNow');
@@ -198,8 +198,7 @@ onAuthStateChanged(auth, (user) => {
     });
 
     // Recent visitor logs
-    const visitorQuery = query(ref(db, 'recentVisitors'), limitToLast(40));
-    onValue(visitorQuery, (snap) => {
+    onValue(ref(db, 'presence/history'), (snap) => {
       const logsBox = document.getElementById('visitorLogsList');
       const badge = document.getElementById('visitorCountBadge');
       if (!logsBox) return;
@@ -208,8 +207,12 @@ onAuthStateChanged(auth, (user) => {
         if (badge) badge.textContent = '0 visits logged';
         return;
       }
-      const raw = snap.val();
-      const list = Object.entries(raw).map(([k, v]) => ({ id: k, ...v })).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+      const raw = snap.val() || {};
+      const list = Object.entries(raw)
+        .map(([k, v]) => ({ id: k, ...v }))
+        .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
+        .slice(0, 40);
+
       if (badge) badge.textContent = `${list.length} recent visits`;
 
       logsBox.innerHTML = list.map(v => {

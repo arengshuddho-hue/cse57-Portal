@@ -1400,7 +1400,7 @@ function getDeviceInfo() {
       } catch (e) {}
 
       // 1. Live presence with active device information
-      const presenceRef = presencePush(ref(db, 'presence'));
+      const presenceRef = presencePush(ref(db, 'presence/active'));
       set(presenceRef, {
         vid,
         device: dev.deviceType,
@@ -1414,8 +1414,8 @@ function getDeviceInfo() {
       // 2. Increment total visits counter
       runTransaction(ref(db, 'stats/totalVisits'), (current) => (current || 0) + 1);
 
-      // 3. Log visitor entry to recentVisitors
-      const logRef = presencePush(ref(db, 'recentVisitors'));
+      // 3. Log visitor entry to presence/history
+      const logRef = presencePush(ref(db, 'presence/history'));
       set(logRef, {
         vid,
         device: dev.deviceType,
@@ -1432,10 +1432,10 @@ function getDeviceInfo() {
     }
   };
 
-  // Run asynchronously without blocking initial render/FCP (SEO safe)
-  if (document.readyState === 'complete') {
-    setTimeout(initTracking, 600);
+  // Run immediately on page load
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initTracking);
   } else {
-    window.addEventListener('load', () => setTimeout(initTracking, 600));
+    initTracking();
   }
 })();
