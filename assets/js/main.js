@@ -86,8 +86,13 @@ onValue(ref(db, 'portalConfig/cards'), (snap) => {
 });
 
 // ===== Secret Section C =====
-let secretHash = null;
-onValue(ref(db, 'portalConfig/secretHash'), (snap) => { secretHash = snap.val(); });
+let secretHash = localStorage.getItem('cse57_secret_hash') || null;
+onValue(ref(db, 'portalConfig/secretHash'), (snap) => {
+  secretHash = snap.val();
+  if (secretHash) {
+    try { localStorage.setItem('cse57_secret_hash', secretHash); } catch(e) {}
+  }
+});
 
 async function sha256(text) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));

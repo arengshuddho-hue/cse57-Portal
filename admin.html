@@ -4,197 +4,499 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin Dashboard | CSE-57 Section C</title>
-
+<link rel="icon" type="image/png" href="assets/images/Favicon.png">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/admin.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
 <!-- Login Screen -->
-<div class="container" id="loginScreen">
-  <h2 style="color: var(--gold);"><i class="fa-solid fa-shield-halved"></i> Secure Admin Login</h2>
-  <div class="form-group">
-    <input type="email" id="adminEmail" placeholder="Enter Admin Email" style="margin-bottom: 15px;">
-    <input type="password" id="password" placeholder="Enter Admin Password">
+<div class="admin-shell" id="loginScreen">
+  <div class="login-icon-wrap">
+    <i class="fa-solid fa-shield-halved"></i>
   </div>
-  <button class="btn" onclick="login()" style="width: 100%;">Secure Login</button>
-  <div id="loading"><i class="fa-solid fa-spinner fa-spin"></i> Authenticating...</div>
+  <h2>Admin Control Center</h2>
+  <p class="login-sub">Secure authentication for CSE-57 Section C portal</p>
+  
+  <div class="form-group" style="text-align: left;">
+    <label for="adminEmail"><i class="fa-solid fa-envelope"></i> Email Address</label>
+    <input type="email" id="adminEmail" placeholder="Enter Admin Email" autocomplete="off">
+  </div>
+  
+  <div class="form-group" style="text-align: left; margin-bottom: 24px;">
+    <label for="password"><i class="fa-solid fa-lock"></i> Password</label>
+    <input type="password" id="password" placeholder="Enter Admin Password" autocomplete="off" onkeydown="if(event.key==='Enter')login()">
+  </div>
+
+  <button class="btn" onclick="login()" style="width: 100%; padding: 13px;">
+    <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In to Dashboard
+  </button>
+  
+  <div id="loading">
+    <i class="fa-solid fa-circle-notch fa-spin"></i> Authenticating credentials...
+  </div>
+
+  <div>
+    <a href="index.html" class="back-to-portal">
+      <i class="fa-solid fa-arrow-left"></i> Return to Public Portal
+    </a>
+  </div>
 </div>
 
-<!-- Admin Dashboard -->
-<div class="container" id="adminScreen" style="display:none;">
-  <div class="header">
-    <h1><i class="fa-solid fa-gear"></i> Admin Dashboard</h1>
-
-    <!-- Desktop buttons -->
-    <div class="header-actions">
-      <a href="index.html" target="_blank" class="btn" style="margin-right: 10px;"><i class="fa-solid fa-eye"></i> View Portal</a>
-      <button class="btn" style="background: #e74c3c;" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+<!-- Admin Dashboard Screen -->
+<div class="admin-shell" id="adminScreen" style="display:none;">
+  
+  <!-- Top Navigation Header -->
+  <header class="header">
+    <div class="brand-group">
+      <div class="brand-icon">
+        <i class="fa-solid fa-graduation-cap"></i>
+      </div>
+      <div class="brand-title">
+        <h1>CSE-57 Section C</h1>
+        <div class="brand-sub">
+          <span>Admin Control Console</span>
+          <span class="status-pill"><span class="pulsing-dot"></span> Live Sync</span>
+        </div>
+      </div>
     </div>
 
-    <!-- Mobile hamburger -->
+    <!-- Desktop actions -->
+    <div class="header-actions">
+      <a href="index.html" target="_blank" class="btn btn-secondary">
+        <i class="fa-solid fa-arrow-up-right-from-square"></i> View Portal
+      </a>
+      <button class="btn" onclick="logout()">
+        <i class="fa-solid fa-right-from-bracket"></i> Logout
+      </button>
+    </div>
+
+    <!-- Mobile Hamburger Menu -->
     <div class="menu-wrapper">
-      <button class="hamburger-btn" onclick="toggleMenu()" id="hamburgerBtn">
+      <button class="hamburger-btn" onclick="toggleMenu()" id="hamburgerBtn" aria-label="Toggle navigation menu">
         <i class="fa-solid fa-bars"></i>
       </button>
       <div class="dropdown-menu" id="dropdownMenu">
         <a href="index.html" target="_blank" class="dropdown-item">
-          <i class="fa-solid fa-eye"></i> View Portal
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> View Portal
         </a>
         <button class="dropdown-item dropdown-item-danger" onclick="logout()">
           <i class="fa-solid fa-right-from-bracket"></i> Logout
         </button>
       </div>
     </div>
-  </div>
+  </header>
 
-  <script>
-    function toggleMenu() {
-      document.getElementById('dropdownMenu').classList.toggle('open');
-    }
-    document.addEventListener('click', function(e) {
-      const wrapper = document.querySelector('.menu-wrapper');
-      if (wrapper && !wrapper.contains(e.target)) {
-        document.getElementById('dropdownMenu').classList.remove('open');
-      }
-    });
-  </script>
-  <div id="statsCard" style="display:flex; gap:16px; margin-bottom:24px; flex-wrap:wrap;">
-    <div style="flex:1; min-width:140px; background:rgba(163,113,247,0.06); border:1px solid rgba(163,113,247,0.2); border-radius:12px; padding:16px 20px;">
-      <div style="font-size:0.7em; color:#8b949e; letter-spacing:1px; text-transform:uppercase; margin-bottom:6px;">🟢 Active Now</div>
-      <div id="statActiveNow" style="font-size:2em; font-weight:700; color:#56d364;">—</div>
-    </div>
-    <div style="flex:1; min-width:140px; background:rgba(88,166,255,0.06); border:1px solid rgba(88,166,255,0.2); border-radius:12px; padding:16px 20px;">
-      <div style="font-size:0.7em; color:#8b949e; letter-spacing:1px; text-transform:uppercase; margin-bottom:6px;">👁 Total Visits</div>
-      <div id="statTotalVisits" style="font-size:2em; font-weight:700; color:#58a6ff;">—</div>
-    </div>
-  </div>
-
-  <!-- Device & Visitor Tracking -->
-  <div style="background: rgba(56, 139, 253, 0.05); border: 1px solid rgba(56, 139, 253, 0.2); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
-    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
-      <div style="font-weight:600; color:var(--text-main); font-size:15px;">
-        <i class="fa-solid fa-laptop-code"></i> Live Devices & Recent Visitors
+  <!-- Realtime Analytics KPI Row -->
+  <section class="stats-grid" id="statsCard">
+    <div class="stat-box green">
+      <div class="stat-icon-wrap">
+        <i class="fa-solid fa-signal"></i>
       </div>
-      <span id="visitorCountBadge" style="font-size:0.75em; background:rgba(56,139,253,0.15); color:#58a6ff; padding:3px 10px; border-radius:20px; border:1px solid rgba(56,139,253,0.3);">
-        Updating live...
-      </span>
-    </div>
-
-    <!-- Active Devices Currently Online -->
-    <div style="margin-bottom: 14px;">
-      <div style="font-size:0.75em; color:#8b949e; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">
-        🟢 Online Right Now:
-      </div>
-      <div id="activeDevicesList" style="display:flex; gap:8px; flex-wrap:wrap;">
-        <span style="color:#8b949e; font-size:0.85em;">No active visitors</span>
+      <div class="stat-content">
+        <div class="stat-label">Active Visitors Now</div>
+        <div class="stat-value" id="statActiveNow">—</div>
       </div>
     </div>
 
-    <!-- Recent Visitor Logs -->
-    <div style="font-size:0.75em; color:#8b949e; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">
-      🕒 Recent Visits Log:
+    <div class="stat-box blue">
+      <div class="stat-icon-wrap">
+        <i class="fa-solid fa-eye"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-label">Total Portal Visits</div>
+        <div class="stat-value" id="statTotalVisits">—</div>
+      </div>
     </div>
-    <div id="visitorLogsList" style="max-height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
-      <div style="color:#8b949e; font-size:0.85em; text-align:center; padding:15px;">Loading visitor logs...</div>
-    </div>
-  </div>
-    <div style="background: rgba(88,166,255,0.06); border: 1px solid rgba(88,166,255,0.2); border-radius: 12px; padding: 16px 20px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
-    <div>
-      <div style="font-weight: 600; color: var(--text-main); margin-bottom: 4px;"><i class="fa-solid fa-chalkboard"></i> Google Classroom Sync</div>
-      <div style="font-size: 0.8em; color: #8b949e;">Pull new materials from Classroom into the portal</div>
-    </div>
-    <button class="btn" id="classroomSyncBtn" onclick="syncClassroom()"><i class="fa-solid fa-rotate"></i> Sync from Classroom</button>
-  </div>
-  <div id="classroomSyncResult" style="margin-bottom: 20px;"></div>
-  <!-- Secret Password -->
-<div style="background: rgba(226,185,111,0.06); border: 1px solid rgba(226,185,111,0.25); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
-  <div style="font-weight:600; color:var(--text-main); margin-bottom:6px;"><i class="fa-solid fa-lock"></i> Section C Password</div>
-  <div style="font-size:0.8em; color:#8b949e; margin-bottom:14px;">Secret card khulte ei password lagbe. Notun password dile purano ta bodle jabe.</div>
-  <div style="display:flex; gap:10px; flex-wrap:wrap;">
-    <input type="text" id="secretPassNew" placeholder="New password" style="flex:1; min-width:180px;">
-    <button class="btn" onclick="setSecretPass()"><i class="fa-solid fa-key"></i> Set Password</button>
-  </div>
-</div>
-  <!-- Card Layout Manager -->
-<div style="background: rgba(163,113,247,0.05); border: 1px solid rgba(163,113,247,0.2); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
-  <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:6px;">
-    <div style="font-weight:600; color:var(--text-main);"><i class="fa-solid fa-table-cells-large"></i> Card Layout Manager</div>
-    <div style="display:flex; gap:8px; flex-wrap:wrap;">
-      <button class="btn" style="padding:8px 14px; font-size:13px; background:#21262d; border:1px solid #30363d;" onclick="resetCardLayout()"><i class="fa-solid fa-rotate-left"></i> Reset</button>
-      <button class="btn" id="saveLayoutBtn" style="padding:8px 14px; font-size:13px;" onclick="saveCardLayout()"><i class="fa-solid fa-floppy-disk"></i> Save Layout</button>
-    </div>
-  </div>
-  <div style="font-size:0.8em; color:#8b949e; margin-bottom:16px;">
-    Drag kore (ba ↑ ↓ button diye) order thik koro. 👁 diye hide/show koro. Shesh e "Save Layout" chapo.
-  </div>
-  <div id="cardLayoutList" class="layout-list"></div>
-</div>
-  
-  <div class="form-group">
-    <label for="categorySelect" style="color: var(--gold); font-size: 16px;">📂 Select Category to Manage</label>
-    <select id="categorySelect" onchange="renderItems()" style="border: 2px solid var(--gold);">
-      <option value="TICKER">Scrolling Ticker (INFO)</option>
-      <option value="DSA2">DSA 2</option>
-      <option value="SE">Software Engg</option>
-      <option value="MATH">Complex Variables</option>
-      <option value="NUM">Numerical Methods</option>
-      <option value="DCOM">Data Communication</option>
-      <option value="IPLAB">Internet Prog. Lab</option>
-      <option value="LINKS">Reference Links</option>
-      <option value="COURSES">Upcoming Courses</option>
-      <option value="FACULTY">Faculty List</option>
-      <option value="CLASSROOM">Classroom Code</option>
-      <option value="GCLASSROOM">Google Classroom (Synced)</option>
-      <option value="CLSROUTINE">Class Routine</option>
-      <option value="HACKATHON">Upcoming Hackathon</option>
-      <option value="CP">Upcoming CP</option>
-      <option value="PQS">PQ Solutions</option>
-      <option value="ROUTINE">Exam Routine</option>
-      <option value="NOTES">Notes</option>
-      <option value="SUG">Suggestions</option>
-      <option value="BOOKS">Books</option>
-      <option value="SECRETC">🔒 Section C (Secret Notes)</option>
-    </select>
-  </div>
 
-  <div style="background: rgba(226,185,111,0.08); padding: 20px; border-radius: 12px; margin-bottom: 30px; border: 1px solid rgba(226,185,111,0.3);">
+    <div class="stat-box purple">
+      <div class="stat-icon-wrap">
+        <i class="fa-solid fa-layer-group"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-label">Managed Categories</div>
+        <div class="stat-value" id="statCategoryCount">21</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main 2-Column Responsive Dashboard Grid -->
+  <div class="dashboard-grid">
     
+    <!-- LEFT COLUMN: Analytics & Layout Management -->
+    <div class="dash-col">
+      
+      <!-- Visitor & Device Tracking Card -->
+      <section class="admin-card">
+        <div class="card-header">
+          <div class="card-title">
+            <i class="fa-solid fa-laptop-code"></i> Live Devices & Recent Visits
+          </div>
+          <span class="card-badge" id="visitorCountBadge">Live Stream</span>
+        </div>
+        <div class="card-subtitle">Real-time breakdown of online devices and latest visitor logs</div>
+
+        <!-- Online Right Now -->
+        <div style="margin-bottom: 16px;">
+          <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:8px;">
+            <i class="fa-solid fa-circle" style="color:#34d399; font-size:9px;"></i> Online Right Now:
+          </div>
+          <div id="activeDevicesList" style="display:flex; gap:8px; flex-wrap:wrap;">
+            <span style="color:var(--text-dim); font-size:0.85rem;">No active visitors</span>
+          </div>
+        </div>
+
+        <!-- Recent Visits Log -->
+        <div>
+          <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:8px;">
+            <i class="fa-solid fa-clock-rotate-left" style="color:var(--accent-blue); font-size:11px;"></i> Recent Visits Activity:
+          </div>
+          <div id="visitorLogsList" style="max-height: 290px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+            <div style="color:var(--text-dim); font-size:0.85rem; text-align:center; padding:18px;">Loading visitor logs...</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Card Layout & Reorder Manager -->
+      <section class="admin-card">
+        <div class="card-header">
+          <div class="card-title">
+            <i class="fa-solid fa-table-cells-large"></i> Card Layout & Visibility
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-secondary" style="padding:6px 12px; font-size:0.8rem;" onclick="resetCardLayout()">
+              <i class="fa-solid fa-rotate-left"></i> Reset
+            </button>
+            <button class="btn" id="saveLayoutBtn" style="padding:6px 14px; font-size:0.8rem;" onclick="saveCardLayout()">
+              <i class="fa-solid fa-floppy-disk"></i> Save Layout
+            </button>
+          </div>
+        </div>
+        <div class="card-subtitle">
+          Drag cards (or use ↑ ↓) to reorder portal grid. Click <i class="fa-solid fa-eye" style="color:#34d399;"></i> to hide or unhide cards for students.
+        </div>
+        <div id="cardLayoutList" class="layout-list"></div>
+      </section>
+
+    </div>
+
+    <!-- RIGHT COLUMN: Utilities, Content Creation & Management -->
+    <div class="dash-col">
+
+      <!-- 🤖 AI Copilot & Smart Auto-Poster Card -->
+      <section class="admin-card ai-copilot-card">
+        <div class="card-header">
+          <div class="card-title">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> AI Copilot & Auto-Poster
+          </div>
+          <span class="ai-badge"><i class="fa-solid fa-bolt"></i> Vision OCR</span>
+        </div>
+        <div class="card-subtitle">
+          ক্লাসের নোটিশ, রুটিন বা খাতার হ্যান্ডরিটেন নোটসের ছবি দিন এবং নির্দেশ লিখুন—AI ছবি স্ক্যান করে স্বয়ংক্রিয়ভাবে টেক্সট উদ্ধার করবে এবং পোর্টালে পোস্ট রেডি করে দেবে।
+        </div>
+
+        <!-- Instruction Input -->
+        <div class="form-group">
+          <label for="aiPromptInput"><i class="fa-solid fa-message"></i> আপনার নির্দেশ / প্রম্পট</label>
+          <textarea id="aiPromptInput" rows="2" placeholder="e.g. এই রুটিনের ছবি দেখে টেক্সট নোটিশ হিসেবে Exam Routine তে আপডেট দাও... অথবা PDF বানিয়ে Section C তে পোস্ট করো..."></textarea>
+        </div>
+
+        <!-- Quick Prompt Chips -->
+        <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px;">
+          <span class="ai-chip" onclick="setAiQuickPrompt('এই রুটিনের ছবি দেখে সুন্দরভাবে ফরম্যাট করে Exam Routine সেকশনে Notice হিসেবে দাও')">
+            <i class="fa-solid fa-calendar-day"></i> রুটিন নোটিশ
+          </span>
+          <span class="ai-chip" onclick="setAiQuickPrompt('এই ছবির সব লেখা স্পষ্টভাবে টেক্সট আকারে DSA 2-তে আপডেট দাও')">
+            <i class="fa-solid fa-pen-nib"></i> DSA 2 আপডেট
+          </span>
+          <span class="ai-chip" onclick="setAiQuickPrompt('এই নোটসগুলো দিয়ে একটি PDF বানিয়ে Section C সিক্রেট সেকশনে আপলোড করো')">
+            <i class="fa-solid fa-file-pdf"></i> PDF বানিয়ে আপলোড
+          </span>
+        </div>
+
+        <!-- Image Attachment & Options -->
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
+          <div style="display:flex; align-items:center; flex-wrap:wrap; gap:10px;">
+            <label class="btn btn-secondary" style="cursor:pointer; padding:7px 14px; font-size:0.8rem; margin:0;">
+              <i class="fa-solid fa-image"></i> ছবি সিলেক্ট করুন
+              <input type="file" id="aiImageInput" accept="image/*" style="display:none;" onchange="handleAiImageSelect(this)">
+            </label>
+            <label style="display:inline-flex; align-items:center; gap:6px; font-size:0.8rem; color:var(--text-muted); cursor:pointer;">
+              <input type="checkbox" id="aiMakePdfToggle"> PDF হিসেবে তৈরি করো
+            </label>
+          </div>
+
+          <button class="btn" id="aiSubmitBtn" onclick="processAiRequest()" style="padding:8px 16px; font-size:0.84rem;">
+            <i class="fa-solid fa-sparkles"></i> AI স্ক্যান ও প্রসেস
+          </button>
+        </div>
+
+        <!-- Thumbnail Preview if attached -->
+        <div id="aiImageThumbWrap" class="ai-thumb-preview" style="display:none;">
+          <img id="aiImageThumb" src="" alt="Selected Preview">
+          <div style="flex:1; min-width:0;">
+            <div id="aiImageName" style="font-size:0.8rem; font-weight:600; color:var(--text-main); text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">image.jpg</div>
+            <div style="font-size:0.72rem; color:#34d399;"><i class="fa-solid fa-check"></i> Vision OCR এর জন্য প্রস্তুত</div>
+          </div>
+          <button class="btn-danger" style="padding:4px 8px; font-size:0.75rem;" onclick="removeAiImage()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <!-- AI Result / Approval Box -->
+        <div id="aiResultBox" class="ai-preview-box" style="display:none;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <div style="font-weight:700; font-size:0.88rem; color:#38bdf8;">
+              <i class="fa-solid fa-circle-check"></i> AI পোস্ট প্রিভিউ (Review & Publish)
+            </div>
+            <span id="aiTargetCategoryBadge" class="card-badge">Category</span>
+          </div>
+
+          <div id="aiReplyMessage" style="font-size:0.8rem; color:var(--text-muted); margin-bottom:12px; font-style:italic;"></div>
+
+          <div class="form-group">
+            <label style="font-size:0.75rem;">পোস্টের টাইটেল:</label>
+            <input type="text" id="aiPreviewTitle" style="font-size:0.85rem; padding:8px 10px;">
+          </div>
+
+          <div class="form-group">
+            <label style="font-size:0.75rem;">কনটেন্ট / টেক্সট:</label>
+            <textarea id="aiPreviewContent" rows="4" style="font-size:0.82rem; font-family:'JetBrains Mono',monospace; padding:8px 10px;"></textarea>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-top:14px;">
+            <div style="font-size:0.75rem; color:var(--text-dim);">
+              টার্গেট: <strong id="aiCategoryText" style="color:var(--text-main);">DSA2</strong>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button class="btn btn-secondary" style="padding:7px 12px; font-size:0.8rem;" onclick="dismissAiPreview()">
+                Dismiss
+              </button>
+              <button class="btn" id="aiPublishBtn" onclick="publishAiPost()" style="padding:8px 16px; font-size:0.84rem; background:linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                <i class="fa-solid fa-rocket"></i> Approve & Publish
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Quick Utilities: Classroom & Secret Password -->
+      <section class="admin-card">
+        <div class="card-header">
+          <div class="card-title">
+            <i class="fa-solid fa-bolt"></i> Quick Controls
+          </div>
+          <span class="card-badge">Utilities</span>
+        </div>
+
+        <!-- Classroom Sync Block -->
+        <div style="background: rgba(56, 189, 248, 0.05); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: var(--radius-md); padding: 14px 16px; margin-bottom: 14px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+            <div>
+              <div style="font-weight: 600; font-size: 0.9rem; color: var(--text-main); margin-bottom: 2px;">
+                <i class="fa-solid fa-chalkboard" style="color:var(--accent-blue)"></i> Classroom Sync
+              </div>
+              <div style="font-size: 0.78rem; color: var(--text-muted);">Pull new assignments & files from Google Classroom</div>
+            </div>
+            <button class="btn" id="classroomSyncBtn" onclick="syncClassroom()" style="padding: 8px 14px; font-size: 0.82rem;">
+              <i class="fa-solid fa-rotate"></i> Sync Now
+            </button>
+          </div>
+          <div id="classroomSyncResult" style="margin-top: 10px;"></div>
+        </div>
+
+        <!-- Secret Section C Password Block -->
+        <div style="background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: var(--radius-md); padding: 14px 16px;">
+          <div style="font-weight: 600; font-size: 0.9rem; color: var(--text-main); margin-bottom: 2px;">
+            <i class="fa-solid fa-lock" style="color:var(--accent-amber)"></i> Section C Password
+          </div>
+          <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 10px;">
+            Required to unlock the secret Section C notes card
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <input type="text" id="secretPassNew" placeholder="New password" style="flex:1; min-width:160px; font-size:0.85rem; padding:8px 12px;">
+            <button class="btn" onclick="setSecretPass()" style="padding:8px 14px; font-size:0.82rem;">
+              <i class="fa-solid fa-key"></i> Update Pass
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Content Manager: Add Material Form -->
+      <section class="admin-card">
+        <div class="card-header">
+          <div class="card-title">
+            <i class="fa-solid fa-cloud-arrow-up"></i> Manage & Add Resources
+          </div>
+          <span class="card-badge">Publishing</span>
+        </div>
+
+        <!-- Category Selector -->
+        <div class="form-group hero-select-wrap">
+          <label for="categorySelect">
+            <i class="fa-solid fa-folder-open"></i> Selected Category
+          </label>
+          <select id="categorySelect" onchange="renderItems()">
+            <option value="TICKER">📢 Scrolling Ticker (INFO Notice)</option>
+            <option value="DSA2">🌳 DSA 2</option>
+            <option value="SE">⚙️ Software Engineering</option>
+            <option value="MATH">📐 Complex Variables</option>
+            <option value="NUM">🔢 Numerical Methods</option>
+            <option value="DCOM">🌐 Data Communication</option>
+            <option value="IPLAB">💻 Internet Prog. Lab</option>
+            <option value="LINKS">🔗 Reference Links</option>
+            <option value="COURSES">🎓 Upcoming Courses</option>
+            <option value="FACULTY">👨‍🏫 Faculty List</option>
+            <option value="CLASSROOM">🏷️ Classroom Code</option>
+            <option value="GCLASSROOM">📚 Google Classroom (Synced)</option>
+            <option value="CLSROUTINE">📅 Class Routine</option>
+            <option value="HACKATHON">🏆 Upcoming Hackathon</option>
+            <option value="CP">🎯 Upcoming CP</option>
+            <option value="PQS">📜 PQ Solutions</option>
+            <option value="ROUTINE">🗓️ Exam Routine</option>
+            <option value="NOTES">📖 Notes</option>
+            <option value="SUG">💡 Suggestions</option>
+            <option value="BOOKS">📚 Books</option>
+            <option value="SECRETC">🔒 Section C (Secret Notes)</option>
+          </select>
+        </div>
+
+        <!-- Material Publishing Form -->
+        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 18px; margin-bottom: 20px;">
+          
+          <div class="form-group">
+            <label for="itemType"><i class="fa-solid fa-tag"></i> Material Type</label>
+            <select id="itemType" onchange="toggleInputMode()">
+              <option value="link">🔗 Link (PDF, YouTube, Drive, Website)</option>
+              <option value="upload">📤 Upload File (Direct PDF / Image)</option>
+              <option value="image">🖼️ Image (Direct Display)</option>
+              <option value="text">📝 Plain Text (Notice / Info)</option>
+              <option value="code">🔢 Passcode (Copyable Code)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="itemTitle"><i class="fa-solid fa-heading"></i> Title / Label</label>
+            <input type="text" id="itemTitle" placeholder="Enter title to display">
+          </div>
+
+          <!-- Link / Text input (shown by default) -->
+          <div class="form-group" id="linkInputWrap">
+            <label for="itemContent"><i class="fa-solid fa-align-left"></i> Content / URL</label>
+            <textarea id="itemContent" rows="3" placeholder="Paste your link here, or write your notice..."></textarea>
+          </div>
+
+          <!-- File upload input (shown when "Upload File" is selected) -->
+          <div class="form-group" id="fileInputWrap" style="display:none;">
+            <label><i class="fa-solid fa-file-arrow-up"></i> Choose Document or Image</label>
+            <div class="file-dropzone">
+              <i class="fa-solid fa-cloud-arrow-up" style="font-size:24px; color:var(--accent-purple); margin-bottom:8px; display:block;"></i>
+              <input type="file" id="itemFile" accept="image/*,application/pdf">
+              <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">Supported: PDF, JPG, PNG, WEBP (stored securely on Cloudinary)</div>
+            </div>
+          </div>
+
+          <button class="btn" id="saveBtn" onclick="addItem()" style="width: 100%; padding: 12px; margin-top: 6px;">
+            <i class="fa-solid fa-cloud-arrow-up"></i> Save to Database
+          </button>
+        </div>
+
+        <!-- Current Items in Category List -->
+        <div>
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+            <div style="font-size: 0.9rem; font-weight: 600; color: var(--text-main);">
+              <i class="fa-solid fa-list-check" style="color:var(--accent-purple)"></i> Existing Items in Selected Category
+            </div>
+          </div>
+          <div class="item-list" id="itemList"></div>
+        </div>
+
+      </section>
+
+    </div>
+
+  </div>
+
+</div> 
+
+<!-- Edit Item Modal -->
+<div id="editModalOverlay" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeEditModal()">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-title">
+        <i class="fa-solid fa-pen-to-square"></i> Edit Material
+      </div>
+      <button class="modal-close" onclick="closeEditModal()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
     <div class="form-group">
-      <label>Item Type</label>
-      <select id="itemType" onchange="toggleInputMode()">
+      <label for="editItemCategory"><i class="fa-solid fa-folder-open"></i> Category</label>
+      <select id="editItemCategory">
+        <option value="TICKER">📢 Scrolling Ticker (INFO Notice)</option>
+        <option value="DSA2">🌳 DSA 2</option>
+        <option value="SE">⚙️ Software Engineering</option>
+        <option value="MATH">📐 Complex Variables</option>
+        <option value="NUM">🔢 Numerical Methods</option>
+        <option value="DCOM">🌐 Data Communication</option>
+        <option value="IPLAB">💻 Internet Prog. Lab</option>
+        <option value="LINKS">🔗 Reference Links</option>
+        <option value="COURSES">🎓 Upcoming Courses</option>
+        <option value="FACULTY">👨‍🏫 Faculty List</option>
+        <option value="CLASSROOM">🏷️ Classroom Code</option>
+        <option value="GCLASSROOM">📚 Google Classroom (Synced)</option>
+        <option value="CLSROUTINE">📅 Class Routine</option>
+        <option value="HACKATHON">🏆 Upcoming Hackathon</option>
+        <option value="CP">🎯 Upcoming CP</option>
+        <option value="PQS">📜 PQ Solutions</option>
+        <option value="ROUTINE">🗓️ Exam Routine</option>
+        <option value="NOTES">📖 Notes</option>
+        <option value="SUG">💡 Suggestions</option>
+        <option value="BOOKS">📚 Books</option>
+        <option value="SECRETC">🔒 Section C (Secret Notes)</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="editItemType"><i class="fa-solid fa-tag"></i> Material Type</label>
+      <select id="editItemType">
         <option value="link">🔗 Link (PDF, YouTube, Drive, Website)</option>
-        <option value="upload">📤 Upload File (Image / PDF)</option>
-        <option value="image">🖼️ Image (Direct Display)</option>
+        <option value="upload">📤 File / Document</option>
+        <option value="image">🖼️ Image</option>
         <option value="text">📝 Plain Text (Notice / Info)</option>
         <option value="code">🔢 Passcode (Copyable Code)</option>
       </select>
     </div>
 
     <div class="form-group">
-      <label>Title Name </label>
-      <input type="text" id="itemTitle" placeholder="Enter title to display">
+      <label for="editItemTitle"><i class="fa-solid fa-heading"></i> Title</label>
+      <input type="text" id="editItemTitle">
     </div>
 
-    <!-- Link / Text input (shown by default) -->
-    <div class="form-group" id="linkInputWrap">
-      <label>Content </label>
-      <textarea id="itemContent" rows="3" placeholder="Paste your link here, or write your text..."></textarea>
+    <div class="form-group">
+      <label for="editItemContent"><i class="fa-solid fa-align-left"></i> Content / Link</label>
+      <textarea id="editItemContent" rows="4"></textarea>
     </div>
 
-    <!-- File upload input (shown when "Upload File" is selected) -->
-    <div class="form-group" id="fileInputWrap" style="display:none;">
-      <label>Choose File (Image or PDF) </label>
-      <input type="file" id="itemFile" accept="image/*,application/pdf" style="border: 2px dashed var(--gold); padding: 12px; background: rgba(226,185,111,0.05); border-radius: 8px;">
-      <small style="color:#aaa; display:block; margin-top:6px;"></small>
+    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:22px;">
+      <button class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+      <button class="btn" id="editSaveBtn" onclick="saveEditedItem()">
+        <i class="fa-solid fa-check"></i> Save Changes
+      </button>
     </div>
-    
-    <button class="btn" id="saveBtn" onclick="addItem()" style="width: 100%;"><i class="fa-solid fa-cloud-arrow-up"></i> Save to Database</button>
   </div>
+</div>
 
-  <h3><i class="fa-solid fa-list"></i> Current Items in Category</h3>
-  <div class="item-list" id="itemList"></div>
-</div> 
+<script>
+  function toggleMenu() {
+    document.getElementById('dropdownMenu').classList.toggle('open');
+  }
+  document.addEventListener('click', function(e) {
+    const wrapper = document.querySelector('.menu-wrapper');
+    if (wrapper && !wrapper.contains(e.target)) {
+      const dd = document.getElementById('dropdownMenu');
+      if (dd && dd.classList.contains('open')) dd.classList.remove('open');
+    }
+  });
+</script>
 
 <script type="module" src="assets/js/admin.js"></script>
 </body>

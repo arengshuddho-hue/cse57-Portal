@@ -352,7 +352,10 @@ window.renderItems = function() {
     
     div.innerHTML = `
       <div class="item-content">${displayStr}</div>
-      <button class="btn btn-danger" onclick="deleteItem('${category}', ${index})"><i class="fa-solid fa-trash"></i> Delete</button>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button class="btn btn-secondary" onclick="openEditItem('${category}', ${index})" style="padding:6px 12px; font-size:12px;"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+        <button class="btn btn-danger" onclick="deleteItem('${category}', ${index})" style="padding:6px 12px; font-size:12px;"><i class="fa-solid fa-trash"></i> Delete</button>
+      </div>
     `;
     listEl.appendChild(div);
   });
@@ -546,3 +549,255 @@ function getTimeAgo(ts) {
   const days = Math.floor(hrs / 24);
   return days + 'd ago';
 }
+
+// ===== Feature 1: Item Edit System =====
+let editingCategory = null;
+let editingIndex = null;
+
+window.openEditItem = function(category, index) {
+  editingCategory = category;
+  editingIndex = index;
+  const item = (dbData[category] || [])[index];
+  if (!item) return;
+
+  const catSelect = document.getElementById('editItemCategory');
+  const typeSelect = document.getElementById('editItemType');
+  const titleInput = document.getElementById('editItemTitle');
+  const contentInput = document.getElementById('editItemContent');
+
+  if (catSelect) catSelect.value = category;
+  if (typeSelect) typeSelect.value = item.type || (typeof item === 'string' ? 'link' : 'text');
+  if (titleInput) titleInput.value = typeof item === 'string' ? '' : (item.title || '');
+  if (contentInput) contentInput.value = typeof item === 'string' ? item : (item.content || item.file || item.link || item.code || '');
+
+  document.getElementById('editModalOverlay').style.display = 'flex';
+};
+
+window.closeEditModal = function() {
+  document.getElementById('editModalOverlay').style.display = 'none';
+  editingCategory = null;
+  editingIndex = null;
+};
+
+window.saveEditedItem = async function() {
+  if (editingCategory === null || editingIndex === null) return;
+
+  const newCat = document.getElementById('editItemCategory').value;
+  const newType = document.getElementById('editItemType').value;
+  const newTitle = document.getElementById('editItemTitle').value.trim();
+  const newContent = document.getElementById('editItemContent').value.trim();
+
+  if (newCat !== 'TICKER' && !newTitle) return alert('Please enter a Title!');
+  if (!newContent) return alert('Please enter Content or Link!');
+
+  const btn = document.getElementById('editSaveBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+
+  const updatedItem = {
+    type: newType,
+    title: newTitle,
+    content: newContent
+  };
+
+  try {
+    if (newCat !== editingCategory) {
+      dbData[editingCategory].splice(editingIndex, 1);
+      if (!dbData[newCat]) dbData[newCat] = [];
+      dbData[newCat].push(updatedItem);
+    } else {
+      dbData[editingCategory][editingIndex] = updatedItem;
+    }
+
+    await set(ref(db, 'portalData'), dbData);
+    window.closeEditModal();
+    window.renderItems();
+    alert('Item updated successfully!');
+  } catch (err) {
+    alert('Failed to update: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> Save Changes';
+  }
+};
+
+// ===== Feature 2: Admin AI Copilot & Auto-Poster =====
+let aiAttachedImageBase64 = null;
+let aiCurrentPreparedPost = null;
+
+window.setAiQuickPrompt = function(text) {
+  const el = document.getElementById('aiPromptInput');
+  if (el) el.value = text;
+};
+
+window.handleAiImageSelect = function(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    aiAttachedImageBase64 = e.target.result;
+    document.getElementById('aiImageThumb').src = aiAttachedImageBase64;
+    document.getElementById('aiImageName').textContent = file.name;
+    document.getElementById('aiImageThumbWrap').style.display = 'flex';
+  };
+  reader.readAsDataURL(file);
+};
+
+window.removeAiImage = function() {
+  aiAttachedImageBase64 = null;
+  const inp = document.getElementById('aiImageInput');
+  if (inp) inp.value = '';
+  document.getElementById('aiImageThumbWrap').style.display = 'none';
+};
+
+window.dismissAiPreview = function() {
+  document.getElementById('aiResultBox').style.display = 'none';
+  aiCurrentPreparedPost = null;
+};
+
+window.processAiRequest = async function() {
+  const promptInput = document.getElementById('aiPromptInput');
+  const prompt = (promptInput?.value || '').trim();
+  const makePdf = document.getElementById('aiMakePdfToggle')?.checked || false;
+
+  if (!prompt && !aiAttachedImageBase64) {
+    return alert('অনুগ্রহ করে একটি ছবি সিলেক্ট করুন অথবা আপনার নির্দেশ লিখুন!');
+  }
+
+  const submitBtn = document.getElementById('aiSubmitBtn');
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> AI রিড করছে...';
+
+  try {
+    const res = await fetch('/api/admin-ai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt: prompt,
+        image: aiAttachedImageBase64,
+        makePdf: makePdf
+      })
+    });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error || 'AI প্রসেসিং ব্যর্থ হয়েছে');
+    }
+
+    const json = await res.json();
+    const data = json.data;
+
+    if (!data) throw new Error('কোনো ডেটা পাওয়া যায়নি');
+
+    aiCurrentPreparedPost = data;
+
+    // Fill UI preview
+    document.getElementById('aiReplyMessage').textContent = data.reply || 'AI সফলভাবে পোস্ট তৈরি করেছে।';
+    document.getElementById('aiPreviewTitle').value = data.title || '';
+    document.getElementById('aiPreviewContent').value = data.content || '';
+    document.getElementById('aiCategoryText').textContent = data.category || 'NOTES';
+    document.getElementById('aiTargetCategoryBadge').textContent = data.category || 'NOTES';
+
+    document.getElementById('aiResultBox').style.display = 'block';
+  } catch (err) {
+    alert('AI Error: ' + err.message);
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '<i class="fa-solid fa-sparkles"></i> AI স্ক্যান ও প্রসেস';
+  }
+};
+
+window.publishAiPost = async function() {
+  if (!aiCurrentPreparedPost) return;
+
+  const category = aiCurrentPreparedPost.category || 'NOTES';
+  const title = (document.getElementById('aiPreviewTitle').value || '').trim();
+  const content = (document.getElementById('aiPreviewContent').value || '').trim();
+  const makePdf = aiCurrentPreparedPost.makePdf || document.getElementById('aiMakePdfToggle').checked;
+
+  if (!title) return alert('অনুগ্রহ করে একটি Title দিন!');
+  if (!content) return alert('Content ফাঁকা রাখা যাবে না!');
+
+  const pubBtn = document.getElementById('aiPublishBtn');
+  pubBtn.disabled = true;
+  pubBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> পাবলিশ হচ্ছে...';
+
+  try {
+    let itemToSave;
+
+    if (makePdf) {
+      pubBtn.innerHTML = '<i class="fa-solid fa-file-pdf fa-spin"></i> PDF তৈরি ও আপলোড হচ্ছে...';
+      
+      // Generate formatted PDF using jsPDF
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      doc.setFontSize(16);
+      doc.setTextColor(40, 40, 40);
+      doc.text(title, 14, 20);
+
+      doc.setDrawColor(180, 180, 180);
+      doc.line(14, 24, 196, 24);
+
+      doc.setFontSize(10);
+      doc.setTextColor(80, 80, 80);
+      doc.text('CSE-57 Section C Academic Repository', 14, 30);
+
+      doc.setFontSize(11);
+      doc.setTextColor(30, 30, 30);
+      const splitText = doc.splitTextToSize(content, 180);
+      doc.text(splitText, 14, 40);
+
+      const pdfBlob = doc.output('blob');
+      const cleanFileName = title.replace(/[^a-zA-Z0-9]/g, '_').slice(0, 30) + '.pdf';
+      const pdfFile = new File([pdfBlob], cleanFileName, { type: 'application/pdf' });
+
+      // Upload to Cloudinary
+      const pdfUrl = await uploadFileToCloudinary(pdfFile);
+      itemToSave = {
+        type: 'file',
+        title: title,
+        content: pdfUrl
+      };
+    } else {
+      itemToSave = {
+        type: 'text',
+        title: title,
+        content: content
+      };
+    }
+
+    if (!dbData[category]) dbData[category] = [];
+    dbData[category].push(itemToSave);
+
+    await set(ref(db, 'portalData'), dbData);
+
+    // Push notification if not secret category
+    const isSecretCategory = category === 'SECRETC' || category === 'secret' || /secret/i.test(category);
+    if (!isSecretCategory) {
+      await push(ref(db, 'notifications'), {
+        category: category,
+        title: itemToSave.title || 'Update',
+        timestamp: Date.now()
+      });
+    }
+
+    alert(`সফলভাবে [${category}] সেকশনে পাবলিশ করা হয়েছে!`);
+
+    // Reset AI state
+    window.dismissAiPreview();
+    window.removeAiImage();
+    document.getElementById('aiPromptInput').value = '';
+
+    // Switch Category view to the published category to immediately see the new item
+    document.getElementById('categorySelect').value = category;
+    window.renderItems();
+
+  } catch (err) {
+    alert('পাবলিশ ব্যর্থ হয়েছে: ' + err.message);
+  } finally {
+    pubBtn.disabled = false;
+    pubBtn.innerHTML = '<i class="fa-solid fa-rocket"></i> Approve & Publish';
+  }
+};
