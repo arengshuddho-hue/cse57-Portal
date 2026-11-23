@@ -918,19 +918,37 @@ body.light .vault-web-tab.active { background: rgba(130,80,223,0.08); color: #82
   updateFilterCounts();
 
   // ===== Instant Secret Section C Trigger (0 Network Delay) =====
-  window.toggleSecretCard = function() {
+  let lastSecretToggle = 0;
+  window.toggleSecretCard = function(forceState) {
+    const now = Date.now();
+    if (forceState === undefined && now - lastSecretToggle < 500) {
+      return; // Prevent accidental rapid double toggling
+    }
+    lastSecretToggle = now;
+
     const card = document.querySelector('.secret-card');
     if (!card) return;
+
     card.classList.remove('hidden');
-    const isRevealed = card.classList.toggle('revealed');
-    if (isRevealed) {
-      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    card.classList.remove('admin-hidden');
+
+    const shouldReveal = (typeof forceState === 'boolean') ? forceState : !card.classList.contains('revealed');
+
+    if (shouldReveal) {
+      card.classList.add('revealed');
+      card.style.setProperty('display', 'flex', 'important');
       card.classList.add('secret-pulse');
+      setTimeout(function() {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 60);
       setTimeout(function() { card.classList.remove('secret-pulse'); }, 1300);
+    } else {
+      card.classList.remove('revealed');
+      card.style.removeProperty('display');
     }
   };
 
-  // Shortcut: Alt + Q (listening on window & document for instant capture)
+  // Shortcut: Alt + Q
   function handleSecretKey(e) {
     const isAlt = e.altKey || (typeof e.getModifierState === 'function' && e.getModifierState('Alt'));
     const isQ = e.code === 'KeyQ' || (e.key && e.key.toLowerCase() === 'q') || e.key === 'œ';
@@ -941,27 +959,36 @@ body.light .vault-web-tab.active { background: rgba(130,80,223,0.08); color: #82
     }
   }
   window.addEventListener('keydown', handleSecretKey);
-  document.addEventListener('keydown', handleSecretKey);
 
-  // Mobile gesture: Navbar logo 3 quick taps
+  // Mobile gesture: Navbar logo 3 quick taps (debounce + unified pointer)
   (function() {
-    let taps = 0, timer = null;
+    let taps = 0, timer = null, lastTapTime = 0;
     function handleTap(e) {
+      const now = Date.now();
+      if (now - lastTapTime < 220) return; // Prevent double-fire from ghost click/touchend duplicates
+      lastTapTime = now;
+
       taps++;
       clearTimeout(timer);
       timer = setTimeout(function() { taps = 0; }, 2500);
+
       if (taps >= 3) {
         taps = 0;
         window.toggleSecretCard();
       }
     }
+
     const logo = document.querySelector('.nav-logo');
     if (logo) {
-      logo.addEventListener('click', handleTap);
-      logo.addEventListener('touchend', function(e) {
-        e.preventDefault();
-        handleTap(e);
-      }, { passive: false });
+      if (window.PointerEvent) {
+        logo.addEventListener('pointerdown', handleTap);
+      } else {
+        logo.addEventListener('touchstart', function(e) {
+          e.preventDefault();
+          handleTap(e);
+        }, { passive: false });
+        logo.addEventListener('click', handleTap);
+      }
     }
   })();
 </script>

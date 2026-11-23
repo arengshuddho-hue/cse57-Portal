@@ -99,32 +99,9 @@ async function sha256(text) {
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-function toggleSecretCard() {
-  const card = document.querySelector('.secret-card');
-  if (!card) return;
-  card.classList.remove('hidden');
-  const isRevealed = card.classList.toggle('revealed');
-  if (isRevealed) {
-    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    card.classList.add('secret-pulse');
-    setTimeout(() => card.classList.remove('secret-pulse'), 1300);
-  }
-}
-window.toggleSecretCard = toggleSecretCard;
-
-// Desktop: Alt + Q ba keyboard-e "secret" type kora
+// Desktop easter egg: keyboard-e "secret" type kora
 let secretBuffer = '';
 document.addEventListener('keydown', (e) => {
-  // Check for Alt + Q (handles left Alt, right Alt / AltGr, shift/caps variants, and various keyboard layouts)
-  const isAlt = e.altKey || (typeof e.getModifierState === 'function' && e.getModifierState('Alt'));
-  const isQ = e.code === 'KeyQ' || (e.key && e.key.toLowerCase() === 'q') || e.key === 'œ';
-
-  if (isAlt && isQ) {
-    e.preventDefault();
-    toggleSecretCard();
-    return;
-  }
-
   const tag = (e.target.tagName || '').toLowerCase();
   if (tag === 'input' || tag === 'textarea' || e.target.isContentEditable) return;
 
@@ -132,41 +109,12 @@ document.addEventListener('keydown', (e) => {
     secretBuffer = (secretBuffer + e.key.toLowerCase()).slice(-6);
     if (secretBuffer === 'secret') {
       secretBuffer = '';
-      toggleSecretCard();
+      if (typeof window.toggleSecretCard === 'function') {
+        window.toggleSecretCard();
+      }
     }
   }
 });
-
-// Mobile: navbar logo 3 bar tap (3 second er moddhe)
-(function () {
-  let taps = 0, timer = null;
-  function handleTap(e) {
-    taps++;
-    clearTimeout(timer);
-    timer = setTimeout(() => { taps = 0; }, 3000);
-    if (taps >= 3) {
-      taps = 0;
-      toggleSecretCard();
-    }
-  }
-
-  function attach() {
-    const logo = document.querySelector('.nav-logo');
-    if (!logo) return;
-    logo.addEventListener('click', handleTap);
-    logo.addEventListener('touchend', (e) => {
-      // Prevent artificial click delay on mobile touch
-      e.preventDefault();
-      handleTap(e);
-    }, { passive: false });
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', attach);
-  } else {
-    attach();
-  }
-})();
 
 window.openSecretGate = function () {
   if (sessionStorage.getItem('sc_ok') === '1') {
